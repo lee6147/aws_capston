@@ -136,9 +136,12 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 
 /* ── DIFFERENTIATOR: Source Citations ── */
 .msg-sources{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-.msg-src{background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);border-radius:6px;padding:3px 8px;font-size:.7rem;color:var(--cyan);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:3px}
+.msg-src{background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);border-radius:6px;padding:3px 8px;font-size:.7rem;color:var(--cyan);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:3px;max-width:180px}
 .msg-src:hover{background:rgba(6,182,212,0.2);border-color:var(--cyan)}
-.msg-src-page{font-weight:700}
+.msg-src.expanded{max-width:100%;background:rgba(6,182,212,0.15);border-color:var(--cyan);padding:6px 10px;border-radius:8px}
+.msg-src-page{font-weight:700;flex-shrink:0}
+.msg-src-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg-src.expanded .msg-src-text{white-space:normal;overflow:visible}
 
 /* ── DIFFERENTIATOR: Confidence indicator on messages ── */
 .msg-confidence{display:inline-flex;align-items:center;gap:4px;font-size:.65rem;color:var(--text2);margin-left:8px}
@@ -528,7 +531,7 @@ function addBot(t,s,c,doStream,conf){
   d.innerHTML='<div class="msg-av">\uD83E\uDD16</div>';d.appendChild(body);$('msgsInner').appendChild(d);
   setConf(conf||0);
   function fin(){
-    if(s&&s.length){var sw=document.createElement('div');sw.className='msg-sources';s.forEach(function(x){var el=document.createElement('span');el.className='msg-src';el.innerHTML='<span class="msg-src-page">\uD83D\uDCC4 p.'+escHtml(String(x.p))+'</span>'+escHtml(x.x);sw.appendChild(el)});body.appendChild(sw)}
+    if(s&&s.length){var sw=document.createElement('div');sw.className='msg-sources';s.forEach(function(x){var el=document.createElement('span');el.className='msg-src';el.innerHTML='<span class="msg-src-page">\uD83D\uDCC4 p.'+escHtml(String(x.p))+'</span><span class="msg-src-text">'+escHtml(x.x)+'</span>';el.addEventListener('click',function(){el.classList.toggle('expanded')});sw.appendChild(el)});body.appendChild(sw)}
     if(conf===0){var g=document.createElement('div');g.className='msg-guard';g.innerHTML='<span class="msg-guard-icon">\uD83D\uDEE1</span><span>이 답변은 문서에 근거하지 않습니다. ChatGPT/Gemini와 달리 StudyBot은 문서 밖의 내용을 추측하지 않습니다.</span>';body.appendChild(g)}
     var acts=document.createElement('div');acts.className='msg-acts';
     acts.innerHTML='<button class="msg-act" type="button" aria-label="복사" title="복사">\uD83D\uDCCB</button><button class="msg-act" type="button" aria-label="읽어주기" title="읽어주기">\uD83D\uDD0A</button><button class="msg-act" type="button" aria-label="다시 답변" title="다시 답변">\uD83D\uDD04</button><button class="msg-act" type="button" aria-label="좋아요" title="좋아요">\uD83D\uDC4D</button><button class="msg-act" type="button" aria-label="싫어요" title="싫어요">\uD83D\uDC4E</button><button class="msg-act" type="button" aria-label="저장" title="저장">\uD83D\uDD16</button>';

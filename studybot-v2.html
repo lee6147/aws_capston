@@ -93,12 +93,12 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 
 /* Welcome */
 .welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;overflow-y:auto}
-.welcome-icon{font-size:3.5rem;margin-bottom:16px}
-.welcome h2{font-size:1.4rem;margin-bottom:6px}
+.welcome-icon{font-size:3.5rem;margin-bottom:16px;animation:msgSlideIn .6s .1s cubic-bezier(.34,1.56,.64,1) backwards}
+.welcome h2{font-size:1.4rem;margin-bottom:6px;animation:msgSlideIn .5s .2s ease backwards}
 .welcome-sub{color:var(--text2);font-size:.9rem;margin-bottom:8px;max-width:480px}
 /* ── DIFFERENTIATOR: "Not ChatGPT" badge ── */
-.diff-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--green);font-size:.75rem;font-weight:600;margin-bottom:24px}
-.welcome-domains{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;max-width:600px;width:100%;margin-bottom:20px}
+.diff-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--green);font-size:.75rem;font-weight:600;margin-bottom:24px;animation:msgSlideIn .5s .3s ease backwards}
+.welcome-domains{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;max-width:600px;width:100%;margin-bottom:20px;animation:msgSlideIn .5s .4s ease backwards}
 .welcome-domain{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 12px;cursor:pointer;transition:all .2s;text-align:center}
 .welcome-domain:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 20px rgba(59,130,246,0.15)}
 .welcome-domain-icon{font-size:1.8rem;margin-bottom:6px}
@@ -294,6 +294,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 *{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media print{.panel-left,.panel-right,.input-area,.topbar,.confidence-bar,.overlay,.toast-container,.search-overlay,.msg-acts,.chips,.suggest-bar{display:none!important}.app{display:block}.panel-center{width:100%}.messages{display:flex!important;overflow:visible!important}.messages-inner{max-width:100%}.msg{break-inside:avoid;page-break-inside:avoid;border-top:1px solid #ccc!important}.msg-text{font-size:11pt}.welcome{display:none}body{background:#fff;color:#000}}
 </style>
 </head>
 <body>

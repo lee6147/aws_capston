@@ -1,0 +1,1057 @@
+/* =============================================================
+   StudyBot Widget — sb- prefix
+   Designed for: studybot-enhanced-proposal.html
+   Requires CSS variables on :root (--bg, --surface, --card,
+   --border, --text, --text2, --accent, --accent2, --green,
+   --orange, --red, --pink, --cyan, --teal, --gradient,
+   --glass, --radius)
+   ============================================================= */
+
+/* ── Keyframe Animations ────────────────────────────────────── */
+
+@keyframes sb-pulse-ring {
+  0%   { transform: scale(1);   opacity: .7; }
+  70%  { transform: scale(1.55); opacity: 0; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+
+@keyframes sb-btn-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(.88); }
+  80%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes sb-spring-in {
+  0%   { opacity: 0; transform: scale(.85) translateY(24px); }
+  60%  { opacity: 1; transform: scale(1.03) translateY(-4px); }
+  80%  { transform: scale(.98) translateY(2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes sb-spring-out {
+  0%   { opacity: 1; transform: scale(1) translateY(0); }
+  30%  { transform: scale(1.03) translateY(-4px); }
+  100% { opacity: 0; transform: scale(.85) translateY(24px); }
+}
+
+@keyframes sb-dot-bounce {
+  0%, 80%, 100% { transform: translateY(0);   opacity: .4; }
+  40%            { transform: translateY(-7px); opacity: 1; }
+}
+
+@keyframes sb-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes sb-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sb-chip-hover-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,.25); }
+  50%       { box-shadow: 0 0 14px 2px rgba(139,92,246,.3); }
+}
+
+@keyframes sb-scroll-btn-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(3px); }
+}
+
+@keyframes sb-confirm-in {
+  from { opacity: 0; transform: scale(.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+
+/* ── 1. Toggle Button ───────────────────────────────────────── */
+
+.sb-toggle {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9998;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: var(--gradient);
+  color: #fff;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(59,130,246,.45),
+              0 2px 8px rgba(0,0,0,.4);
+  transition: box-shadow .25s, transform .2s;
+  outline-offset: 3px;
+}
+
+/* Pulse ring */
+.sb-toggle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--gradient);
+  opacity: .55;
+  animation: sb-pulse-ring 2.4s cubic-bezier(.45,.05,.55,.95) infinite;
+  pointer-events: none;
+}
+
+.sb-toggle:hover {
+  transform: scale(1.08);
+  box-shadow: 0 12px 40px rgba(59,130,246,.55),
+              0 4px 12px rgba(0,0,0,.45);
+}
+
+.sb-toggle:active {
+  animation: sb-btn-pop .35s ease;
+}
+
+/* Notification badge */
+.sb-toggle .sb-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--red);
+  color: #fff;
+  font-size: .65rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  pointer-events: none;
+  border: 2px solid var(--bg);
+}
+
+
+/* ── 2. Chat Window ─────────────────────────────────────────── */
+
+.sb-window {
+  position: fixed;
+  bottom: 100px;
+  right: 28px;
+  z-index: 9999;
+  width: 400px;
+  height: 560px;
+  max-height: calc(100vh - 120px);
+  border-radius: var(--radius);
+  background: var(--glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 80px rgba(0,0,0,.6),
+              0 8px 32px rgba(0,0,0,.4),
+              inset 0 1px 0 rgba(255,255,255,.06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  /* Default: hidden */
+  opacity: 0;
+  transform: scale(.85) translateY(24px);
+  pointer-events: none;
+  transition: none;
+}
+
+/* Open state */
+.sb-window.sb-open {
+  animation: sb-spring-in .42s cubic-bezier(.34,1.56,.64,1) forwards;
+  pointer-events: all;
+}
+
+/* Close state (JS adds sb-closing, then removes sb-open) */
+.sb-window.sb-closing {
+  animation: sb-spring-out .28s ease-in forwards;
+  pointer-events: none;
+}
+
+
+/* ── 3. Header ──────────────────────────────────────────────── */
+
+.sb-header {
+  flex-shrink: 0;
+  background: linear-gradient(135deg,
+    rgba(59,130,246,.35),
+    rgba(139,92,246,.3),
+    rgba(236,72,153,.2));
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Avatar */
+.sb-header-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.12),
+              0 4px 12px rgba(59,130,246,.4);
+}
+
+/* Title block */
+.sb-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sb-header-title {
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sb-header-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .72rem;
+  color: var(--text2);
+  margin-top: 1px;
+}
+
+.sb-header-status::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  box-shadow: 0 0 6px var(--green);
+}
+
+/* Toolbar buttons */
+.sb-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.sb-toolbar-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255,255,255,.06);
+  color: var(--text2);
+  font-size: .9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .18s, color .18s;
+}
+
+.sb-toolbar-btn:hover {
+  background: rgba(255,255,255,.12);
+  color: var(--text);
+}
+
+.sb-toolbar-btn:active {
+  background: rgba(255,255,255,.18);
+}
+
+/* Close button gets a red tint on hover */
+.sb-toolbar-btn.sb-close:hover {
+  background: rgba(239,68,68,.25);
+  color: var(--red);
+}
+
+
+/* ── 4. Messages Area ───────────────────────────────────────── */
+
+.sb-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(10,14,26,.35);
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+/* Custom scrollbar */
+.sb-messages::-webkit-scrollbar {
+  width: 4px;
+}
+.sb-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sb-messages::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+.sb-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--text2);
+}
+
+
+/* ── 5. Message Rows ────────────────────────────────────────── */
+
+.sb-msg {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 100%;
+  animation: sb-fade-up .22s ease-out;
+}
+
+/* Bot row — left aligned */
+.sb-msg.bot {
+  flex-direction: row;
+}
+
+/* User row — right aligned */
+.sb-msg.user {
+  flex-direction: row-reverse;
+}
+
+/* Bot avatar icon */
+.sb-msg-avatar {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .75rem;
+  margin-bottom: 18px; /* aligns with bubble bottom above timestamp */
+}
+
+.sb-msg.user .sb-msg-avatar {
+  display: none;
+}
+
+
+/* ── 6. Message Bubbles ─────────────────────────────────────── */
+
+.sb-msg-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: .875rem;
+  line-height: 1.6;
+  word-break: break-word;
+  position: relative;
+}
+
+/* Bot bubble */
+.sb-msg.bot .sb-msg-bubble {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+  color: var(--text);
+}
+
+/* User bubble */
+.sb-msg.user .sb-msg-bubble {
+  background: var(--gradient);
+  border-bottom-right-radius: 4px;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(59,130,246,.35);
+}
+
+/* Inline code */
+.sb-msg-bubble code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: .8em;
+  background: rgba(255,255,255,.1);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* Strong */
+.sb-msg-bubble strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+/* Links inside bot bubble */
+.sb-msg.bot .sb-msg-bubble a {
+  color: var(--cyan);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+
+/* ── 7. Typing Indicator ────────────────────────────────────── */
+
+.sb-typing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: sb-fade-up .22s ease-out;
+}
+
+.sb-typing-bubble {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+  padding: 10px 14px;
+}
+
+.sb-typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text2);
+  animation: sb-dot-bounce 1.2s ease-in-out infinite;
+}
+
+.sb-typing-dot:nth-child(2) { animation-delay: .2s; }
+.sb-typing-dot:nth-child(3) { animation-delay: .4s; }
+
+
+/* ── 8. Source Citations ────────────────────────────────────── */
+
+.sb-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.sb-source {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  border-radius: 10px;
+  background: rgba(6,182,212,.08);
+  border: 1px solid rgba(6,182,212,.25);
+  font-size: .78rem;
+  color: var(--cyan);
+  text-decoration: none;
+  transition: background .18s, border-color .18s;
+  cursor: pointer;
+}
+
+.sb-source::before {
+  content: '📄';
+  font-size: .85rem;
+  flex-shrink: 0;
+}
+
+.sb-source:hover {
+  background: rgba(6,182,212,.16);
+  border-color: rgba(6,182,212,.45);
+}
+
+.sb-source-page {
+  margin-left: auto;
+  font-size: .7rem;
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+
+/* ── 9. Suggestion Chips ────────────────────────────────────── */
+
+.sb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.sb-chip {
+  padding: 6px 13px;
+  border-radius: 50px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-size: .78rem;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sb-chip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient);
+  opacity: 0;
+  transition: opacity .2s;
+  border-radius: inherit;
+}
+
+.sb-chip:hover {
+  border-color: transparent;
+  color: #fff;
+  animation: sb-chip-hover-glow .8s ease infinite;
+}
+
+.sb-chip:hover::after {
+  opacity: 1;
+}
+
+.sb-chip span {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ── 10. Input Area ─────────────────────────────────────────── */
+
+.sb-input-area {
+  flex-shrink: 0;
+  padding: 12px 14px;
+  background: rgba(17,24,39,.7);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+}
+
+.sb-input-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sb-input {
+  width: 100%;
+  min-height: 40px;
+  max-height: 120px;
+  padding: 10px 14px;
+  padding-right: 36px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: .875rem;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  overflow-y: auto;
+}
+
+.sb-input::placeholder {
+  color: var(--text2);
+}
+
+.sb-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.18);
+}
+
+.sb-input::-webkit-scrollbar {
+  width: 3px;
+}
+.sb-input::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* Slash command hint icon inside input */
+.sb-input-slash {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  font-size: .75rem;
+  color: var(--text2);
+  pointer-events: none;
+  opacity: .6;
+}
+
+/* Send button */
+.sb-send {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .18s, transform .15s, box-shadow .18s;
+  box-shadow: 0 4px 14px rgba(59,130,246,.4);
+}
+
+.sb-send:hover {
+  background: #2563eb;
+  transform: scale(1.06);
+  box-shadow: 0 6px 20px rgba(59,130,246,.55);
+}
+
+.sb-send:active {
+  transform: scale(.95);
+}
+
+.sb-send:disabled {
+  background: var(--border);
+  color: var(--text2);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+
+/* ── 11. Quick Actions Bar ──────────────────────────────────── */
+
+.sb-quick {
+  flex-shrink: 0;
+  padding: 8px 14px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.sb-quick::-webkit-scrollbar {
+  display: none;
+}
+
+.sb-quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.04);
+  color: var(--text2);
+  font-size: .75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .18s, color .18s, border-color .18s;
+  flex-shrink: 0;
+}
+
+.sb-quick-btn:hover {
+  background: rgba(59,130,246,.15);
+  border-color: rgba(59,130,246,.4);
+  color: var(--accent);
+}
+
+.sb-quick-btn .sb-quick-icon {
+  font-size: .85rem;
+}
+
+
+/* ── 12. Feedback (thumbs up/down) ──────────────────────────── */
+
+.sb-feedback {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.sb-feedback-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-size: .8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .18s;
+}
+
+.sb-feedback-btn:hover {
+  border-color: rgba(255,255,255,.25);
+  color: var(--text);
+  background: rgba(255,255,255,.07);
+}
+
+.sb-feedback-btn.sb-liked {
+  background: rgba(16,185,129,.15);
+  border-color: rgba(16,185,129,.4);
+  color: var(--green);
+}
+
+.sb-feedback-btn.sb-disliked {
+  background: rgba(239,68,68,.12);
+  border-color: rgba(239,68,68,.35);
+  color: var(--red);
+}
+
+.sb-feedback-label {
+  font-size: .7rem;
+  color: var(--text2);
+  margin-left: 2px;
+}
+
+
+/* ── 13. Timestamps ─────────────────────────────────────────── */
+
+.sb-time {
+  font-size: .68rem;
+  color: var(--text2);
+  opacity: .7;
+  margin-top: 4px;
+  padding: 0 2px;
+  display: block;
+}
+
+.sb-msg.bot .sb-time  { text-align: left;  padding-left: 36px; }
+.sb-msg.user .sb-time { text-align: right; }
+
+
+/* ── 14. Slash Command Autocomplete ─────────────────────────── */
+
+.sb-cmd-hint {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 14px;
+  right: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5),
+              0 2px 8px rgba(0,0,0,.3);
+  z-index: 10;
+  animation: sb-fade-up .18s ease-out;
+}
+
+.sb-cmd-hint-header {
+  padding: 7px 12px;
+  font-size: .7rem;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  border-bottom: 1px solid var(--border);
+}
+
+.sb-cmd-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.sb-cmd-item:hover,
+.sb-cmd-item.sb-active {
+  background: rgba(59,130,246,.12);
+}
+
+.sb-cmd-item-cmd {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  min-width: 80px;
+}
+
+.sb-cmd-item-desc {
+  font-size: .78rem;
+  color: var(--text2);
+}
+
+.sb-cmd-item-kbd {
+  margin-left: auto;
+  font-size: .68rem;
+  color: var(--text2);
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: monospace;
+}
+
+
+/* ── 15. Copy Button ────────────────────────────────────────── */
+
+.sb-copy {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.05);
+  color: var(--text2);
+  font-size: .75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .18s, background .18s, color .18s;
+}
+
+/* Show copy button when hovering the parent bubble */
+.sb-msg.bot .sb-msg-bubble:hover .sb-copy {
+  opacity: 1;
+}
+
+.sb-copy:hover {
+  background: rgba(255,255,255,.12);
+  color: var(--text);
+}
+
+.sb-copy.sb-copied {
+  color: var(--green);
+  border-color: rgba(16,185,129,.35);
+  opacity: 1;
+}
+
+
+/* ── 16. Scroll-to-Bottom Button ────────────────────────────── */
+
+.sb-scroll-btn {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 50px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  font-size: .76rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,.4);
+  transition: background .18s, color .18s, box-shadow .18s, opacity .2s;
+  animation: sb-fade-up .2s ease-out;
+  z-index: 5;
+  white-space: nowrap;
+}
+
+.sb-scroll-btn:hover {
+  background: rgba(59,130,246,.18);
+  border-color: rgba(59,130,246,.4);
+  color: var(--accent);
+  box-shadow: 0 6px 20px rgba(0,0,0,.5);
+}
+
+.sb-scroll-btn .sb-scroll-arrow {
+  animation: sb-scroll-btn-bounce 1s ease-in-out infinite;
+}
+
+.sb-scroll-btn.sb-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+/* ── 17. Clear Chat Confirmation Overlay ────────────────────── */
+
+.sb-confirm {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,14,26,.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  border-radius: var(--radius);
+  animation: sb-confirm-in .22s ease-out;
+}
+
+.sb-confirm-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 24px;
+  text-align: center;
+  max-width: 280px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.6);
+}
+
+.sb-confirm-icon {
+  font-size: 2.2rem;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.sb-confirm-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.sb-confirm-body {
+  font-size: .83rem;
+  color: var(--text2);
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
+
+.sb-confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.sb-confirm-cancel {
+  padding: 8px 18px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-size: .85rem;
+  cursor: pointer;
+  transition: background .18s, color .18s;
+}
+
+.sb-confirm-cancel:hover {
+  background: rgba(255,255,255,.07);
+  color: var(--text);
+}
+
+.sb-confirm-ok {
+  padding: 8px 18px;
+  border-radius: 9px;
+  border: none;
+  background: var(--red);
+  color: #fff;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .18s, box-shadow .18s;
+  box-shadow: 0 4px 14px rgba(239,68,68,.35);
+}
+
+.sb-confirm-ok:hover {
+  background: #dc2626;
+  box-shadow: 0 6px 20px rgba(239,68,68,.5);
+}
+
+
+/* ── 18. Responsive — Mobile ────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .sb-window {
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .sb-toggle {
+    bottom: 20px;
+    right: 20px;
+    width: 54px;
+    height: 54px;
+  }
+
+  .sb-msg-bubble {
+    max-width: 88%;
+    font-size: .84rem;
+  }
+
+  .sb-input-area {
+    padding: 10px 12px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .sb-quick {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .sb-header {
+    padding: 12px 14px;
+  }
+
+  .sb-chips {
+    gap: 6px;
+  }
+
+  .sb-chip {
+    font-size: .74rem;
+    padding: 5px 11px;
+  }
+}
+
+/* Safe area for phones with notch (landscape) */
+@media (max-width: 480px) and (orientation: landscape) {
+  .sb-window {
+    height: 100dvh;
+  }
+  .sb-input-area {
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+}
+
+/* Tablets and mid-size screens */
+@media (min-width: 481px) and (max-width: 640px) {
+  .sb-window {
+    width: calc(100vw - 40px);
+    right: 20px;
+    bottom: 90px;
+  }
+}
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .sb-toggle::before,
+  .sb-typing-dot,
+  .sb-scroll-btn .sb-scroll-arrow {
+    animation: none;
+  }
+
+  .sb-window.sb-open {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .sb-window.sb-closing {
+    animation: none;
+    opacity: 0;
+  }
+}

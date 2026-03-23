@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyBot – Tools Panel (Phase 3 Mockup)</title>
+  <style>
+    /* =====================================================
+       DESIGN TOKENS  (matches studybot-enhanced-proposal)
+       ===================================================== */
+    :root {
+      --bg:      #0a0e1a;
+      --surface: #111827;
+      --card:    #1e293b;
+      --border:  #334155;
+      --text:    #e2e8f0;
+      --text2:   #94a3b8;
+      --accent:  #3b82f6;
+      --accent2: #8b5cf6;
+      --green:   #10b981;
+      --orange:  #f59e0b;
+      --red:     #ef4444;
+      --pink:    #ec4899;
+      --radius:  12px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* =====================================================
+       DEMO SHELL  (simulates the surrounding chatbot app)
+       ===================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    .demo-chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .demo-label {
+      font-size: 12px;
+      color: var(--text2);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .demo-bubble {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      line-height: 1.6;
+      max-width: 580px;
+    }
+
+    /* =====================================================
+       TOOLS PANEL – TOGGLE BUTTON
+       ===================================================== */
+    .tools-toggle {
+      position: fixed;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 200;
+
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-right: none;
+      border-radius: var(--radius) 0 0 var(--radius);
+
+      width: 36px;
+      height: 80px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .tools-toggle:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .tools-toggle:hover .tools-toggle__icon {
+      color: #fff;
+    }
+
+    .tools-toggle__icon {
+      color: var(--text2);
+      font-size: 18px;
+      line-height: 1;
+      transition: color var(--transition), transform var(--transition);
+      user-select: none;
+    }
+
+    /* Rotate arrow when panel is open */
+    .tools-panel--open ~ .tools-toggle .tools-toggle__icon,
+    .tools-toggle--active .tools-toggle__icon {
+      transform: rotate(180deg);
+    }
+
+    /* =====================================================
+       TOOLS PANEL – CONTAINER
+       ===================================================== */
+    .tools-panel {
+      width: 300px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+
+      /* Slide-in animation */
+      transform: translateX(0);
+      transition: transform var(--transition), opacity var(--transition);
+      overflow: hidden;
+    }
+
+    .tools-panel--collapsed {
+      transform: translateX(300px);
+      position: fixed;
+      right: 0;
+      top: 0;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    /* =====================================================
+       TOOLS PANEL – HEADER
+       ===================================================== */
+    .tools-panel__header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .tools-panel__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .tools-panel__badge {
+      font-size: 10px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border-radius: 4px;
+      padding: 2px 6px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* =====================================================
+       TOOLS PANEL – TAB BAR
+       ===================================================== */
+    .tools-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .tools-tab {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 10px 4px 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: border-color var(--transition), color var(--transition);
+      color: var(--text2);
+    }
+
+    .tools-tab:hover {
+      color: var(--text);
+    }
+
+    .tools-tab--active {
+      border-bottom-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .tools-tab__icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .tools-tab__label {
+      font-size: 10px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* =====================================================
+       TOOLS PANEL – TAB CONTENT
+       ===================================================== */
+    .tools-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .tools-content::-webkit-scrollbar { width: 4px; }
+    .tools-content::-webkit-scrollbar-track { background: transparent; }
+    .tools-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .tools-pane { display: none; }
+    .tools-pane--active { display: block; }
+
+    /* =====================================================
+       TAB 1 – FLASHCARDS
+       ===================================================== */
+    .tools-flashcard-wrap {
+      perspective: 1000px;
+      margin-bottom: 16px;
+    }
+
+    .tools-flashcard {
+      width: 100%;
+      height: 180px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .tools-flashcard--flipped {
+      transform: rotateY(180deg);
+    }
+
+    .tools-flashcard__face {
+      position: absolute;
+      inset: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      text-align: center;
+    }
+
+    .tools-flashcard__face--back {
+      transform: rotateY(180deg);
+      background: linear-gradient(135deg,
+        rgba(59,130,246,0.12),
+        rgba(139,92,246,0.12));
+      border-color: var(--accent);
+    }
+
+    .tools-flashcard__tag {
+      font-size: 10px;
+      color: var(--accent);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .tools-flashcard__term {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .tools-flashcard__def {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+
+    .tools-flashcard__hint {
+      font-size: 10px;
+      color: var(--text2);
+      margin-top: 10px;
+      opacity: 0.7;
+    }
+
+    .tools-fc-progress {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .tools-fc-counter {
+      font-size: 12px;
+      color: var(--text2);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tools-fc-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .tools-fc-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background var(--transition);
+    }
+
+    .tools-fc-dot--active {
+      background: var(--accent);
+    }
+
+    .tools-fc-dot--done {
+      background: var(--green);
+    }
+
+    .tools-fc-nav {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .tools-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .tools-btn:hover {
+      background: var(--border);
+    }
+
+    .tools-btn--primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .tools-btn--primary:hover {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+
+    .tools-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* =====================================================
+       TAB 2 – STUDY TIMER
+       ===================================================== */
+    .tools-timer-ring-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .tools-timer-ring {
+      position: relative;
+      width: 160px;
+      height: 160px;
+    }
+
+    .tools-timer-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .tools-timer-ring__bg {
+      fill: none;
+      stroke: var(--card);
+      stroke-width: 10;
+    }
+
+    .tools-timer-ring__fg {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 10;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear, stroke 0.3s;
+    }
+
+    .tools-timer-ring__label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tools-timer-time {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .tools-timer-mode {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .tools-timer-sessions {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tools-timer-session-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tools-timer-session-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .tools-timer-session-dot--done {
+      background: var(--green);
+    }
+
+    .tools-timer-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Break mode ring color */
+    .tools-timer--break .tools-timer-ring__fg {
+      stroke: var(--green);
+    }
+
+    .tools-timer--break .tools-timer-time {
+      color: var(--green);
+    }
+
+    /* =====================================================
+       TAB 3 – STUDY STATS
+       ===================================================== */
+    .tools-stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .tools-stat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .tools-stat-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .tools-stat-label {
+      font-size: 12px;
+      color: var(--text2);
+      font-weight: 500;
+    }
+
+    .tools-stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .tools-stat-sub {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 3px;
+    }
+
+    .tools-topic-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .tools-topic-tag {
+      font-size: 11px;
+      background: rgba(59,130,246,0.15);
+      color: var(--accent);
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 6px;
+      padding: 2px 8px;
+    }
+
+    .tools-progress-bar {
+      margin-top: 8px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .tools-progress-bar__fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tools-streak-flames {
+      font-size: 22px;
+      margin-top: 2px;
+    }
+
+    /* =====================================================
+       TAB 4 – BOOKMARKS
+       ===================================================== */
+    .tools-bookmark-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+      position: relative;
+    }
+
+    .tools-bookmark-item:hover {
+      border-color: var(--accent);
+      background: rgba(59,130,246,0.06);
+    }
+
+    .tools-bookmark-item__meta {
+      font-size: 10px;
+      color: var(--text2);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tools-bookmark-item__dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--orange);
+      flex-shrink: 0;
+    }
+
+    .tools-bookmark-item__preview {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .tools-bookmark-item__arrow {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text2);
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .tools-bookmark-item:hover .tools-bookmark-item__arrow {
+      opacity: 1;
+    }
+
+    .tools-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px;
+      text-align: center;
+      gap: 10px;
+    }
+
+    .tools-empty-state__icon {
+      font-size: 36px;
+      opacity: 0.4;
+    }
+
+    .tools-empty-state__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text2);
+    }
+
+    .tools-empty-state__desc {
+      font-size: 12px;
+      color: var(--text2);
+      opacity: 0.7;
+      line-height: 1.5;
+    }
+
+    /* =====================================================
+       SECTION HEADING (shared utility)
+       ===================================================== */
+    .tools-section-heading {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    /* =====================================================
+       RESPONSIVE – hide toggle on large screens
+       ===================================================== */
+    @media (max-width: 680px) {
+      .tools-panel {
+        position: fixed;
+        right: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 300;
+        box-shadow: -8px 0 32px rgba(0,0,0,0.5);
+      }
+
+      .tools-panel--collapsed {
+        transform: translateX(300px);
+      }
+
+      .tools-toggle {
+        display: flex;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tools-panel,
+      .tools-flashcard,
+      .tools-progress-bar__fill,
+      .tools-timer-ring__fg {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ====================================================
+       DEMO CHAT AREA (simulates the left chatbot side)
+       ==================================================== -->
+  <div class="demo-chat-area">
+    <p class="demo-label">StudyBot Chat</p>
+    <div class="demo-bubble">
+      안녕하세요! 세포 분열에 대해 질문해 보세요.<br>
+      오른쪽 패널에서 학습 도구를 사용할 수 있습니다.
+    </div>
+    <div class="demo-bubble" style="background: rgba(59,130,246,0.1); border-color: var(--accent);">
+      <strong>AI:</strong> 세포 분열(Cell Division)은 하나의 세포가 두 개의 딸세포로 나뉘는 과정입니다.
+      진핵세포에서는 <strong>유사 분열(Mitosis)</strong>과 <strong>감수 분열(Meiosis)</strong>이 있습니다.
+    </div>
+  </div>
+
+  <!-- ====================================================
+       TOOLS TOGGLE BUTTON
+       ==================================================== -->
+  <button class="tools-toggle" id="toolsToggle" aria-label="도구 패널 열기/닫기" aria-expanded="true">
+    <span class="tools-toggle__icon" aria-hidden="true">&#8250;</span>
+  </button>
+
+  <!-- ====================================================
+       TOOLS PANEL
+       ==================================================== -->
+  <aside class="tools-panel" id="toolsPanel" aria-label="학습 도구 패널">
+
+    <!-- Header -->
+    <div class="tools-panel__header">
+      <span style="font-size:18px;" aria-hidden="true">🧠</span>
+      <span class="tools-panel__title">학습 도구</span>
+      <span class="tools-panel__badge">NEW</span>
+    </div>
+
+    <!-- Tab Bar -->
+    <nav class="tools-tabs" role="tablist" aria-label="도구 탭">
+      <button class="tools-tab tools-tab--active" id="tab-flashcard"
+              role="tab" aria-selected="true" aria-controls="pane-flashcard"
+              data-tab="flashcard">
+        <span class="tools-tab__icon" aria-hidden="true">🃏</span>
+        <span class="tools-tab__label">암기카드</span>
+      </button>
+      <button class="tools-tab" id="tab-timer"
+              role="tab" aria-selected="false" aria-controls="pane-timer"
+              data-tab="timer">
+        <span class="tools-tab__icon" aria-hidden="true">⏱</span>
+        <span class="tools-tab__label">타이머</span>
+      </button>
+      <button class="tools-tab" id="tab-stats"
+              role="tab" aria-selected="false" aria-controls="pane-stats"
+              data-tab="stats">
+        <span class="tools-tab__icon" aria-hidden="true">📊</span>
+        <span class="tools-tab__label">통계</span>
+      </button>
+      <button class="tools-tab" id="tab-bookmarks"
+              role="tab" aria-selected="false" aria-controls="pane-bookmarks"
+              data-tab="bookmarks">
+        <span class="tools-tab__icon" aria-hidden="true">🔖</span>
+        <span class="tools-tab__label">북마크</span>
+      </button>
+    </nav>
+
+    <!-- Tab Content -->
+    <div class="tools-content">
+
+      <!-- ================================================
+           PANE 1: FLASHCARDS
+           ================================================ -->
+      <div class="tools-pane tools-pane--active" id="pane-flashcard" role="tabpanel" aria-labelledby="tab-flashcard">
+
+        <div class="tools-fc-progress">
+          <span class="tools-fc-counter" id="fcCounter">1 / 3</span>
+          <div class="tools-fc-dots" aria-hidden="true">
+            <div class="tools-fc-dot tools-fc-dot--active" id="fcDot0"></div>
+            <div class="tools-fc-dot" id="fcDot1"></div>
+            <div class="tools-fc-dot" id="fcDot2"></div>
+          </div>
+        </div>
+
+        <div class="tools-flashcard-wrap">
+          <div class="tools-flashcard" id="flashcard" role="button"
+               tabindex="0" aria-label="카드 클릭하여 뒤집기">
+            <div class="tools-flashcard__face tools-flashcard__face--front">
+              <span class="tools-flashcard__tag">Biology · 세포 분열</span>
+              <p class="tools-flashcard__term" id="fcTerm">유사 분열</p>
+              <p class="tools-flashcard__hint">클릭하여 답 보기</p>
+            </div>
+            <div class="tools-flashcard__face tools-flashcard__face--back">
+              <span class="tools-flashcard__tag">정의</span>
+              <p class="tools-flashcard__def" id="fcDef">
+                체세포가 두 개의 동일한 딸세포로 분열하는 과정.<br>
+                G1 → S → G2 → M 단계로 구성.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tools-fc-nav">
+          <button class="tools-btn" id="fcPrev">&#8592; 이전</button>
+          <button class="tools-btn tools-btn--primary" id="fcNext">다음 &#8594;</button>
+        </div>
+      </div>
+
+      <!-- ================================================
+           PANE 2: STUDY TIMER
+           ================================================ -->
+      <div class="tools-pane" id="pane-timer" role="tabpanel" aria-labelledby="tab-timer">
+
+        <div class="tools-timer-ring-wrap" id="timerWrap">
+          <div class="tools-timer-ring">
+            <svg width="160" height="160" viewBox="0 0 160 160" aria-hidden="true">
+              <circle class="tools-timer-ring__bg" cx="80" cy="80" r="70"/>
+              <circle class="tools-timer-ring__fg" id="timerArc"
+                      cx="80" cy="80" r="70"
+                      stroke-dasharray="439.82"
+                      stroke-dashoffset="0"/>
+            </svg>
+            <div class="tools-timer-ring__label">
+              <span class="tools-timer-time" id="timerDisplay" aria-live="polite">25:00</span>
+              <span class="tools-timer-mode" id="timerMode">집중 시간</span>
+            </div>
+          </div>
+
+          <div class="tools-timer-sessions" aria-label="세션 기록">
+            <span>오늘 세션:</span>
+            <div class="tools-timer-session-dots" id="sessionDots" aria-hidden="true">
+              <div class="tools-timer-session-dot"></div>
+              <div class="tools-timer-session-dot"></div>
+              <div class="tools-timer-session-dot"></div>
+              <div class="tools-timer-session-dot"></div>
+            </div>
+            <span id="sessionCount">0 / 4</span>
+          </div>
+        </div>
+
+        <div class="tools-timer-controls">
+          <button class="tools-btn" id="timerReset" title="리셋">&#8635; 리셋</button>
+          <button class="tools-btn tools-btn--primary" id="timerToggle">&#9654; 시작</button>
+        </div>
+      </div>
+
+      <!-- ================================================
+           PANE 3: STUDY STATS
+           ================================================ -->
+      <div class="tools-pane" id="pane-stats" role="tabpanel" aria-labelledby="tab-stats">
+
+        <div class="tools-stat-card">
+          <div class="tools-stat-header">
+            <span class="tools-stat-icon" aria-hidden="true">💬</span>
+            <span class="tools-stat-label">질문 횟수</span>
+          </div>
+          <div class="tools-stat-value">14</div>
+          <div class="tools-stat-sub">이 세션에서</div>
+        </div>
+
+        <div class="tools-stat-card">
+          <div class="tools-stat-header">
+            <span class="tools-stat-icon" aria-hidden="true">📚</span>
+            <span class="tools-stat-label">학습한 주제</span>
+          </div>
+          <div class="tools-topic-list">
+            <span class="tools-topic-tag">세포 분열</span>
+            <span class="tools-topic-tag">미토콘드리아</span>
+            <span class="tools-topic-tag">DNA 복제</span>
+            <span class="tools-topic-tag">감수 분열</span>
+          </div>
+        </div>
+
+        <div class="tools-stat-card">
+          <div class="tools-stat-header">
+            <span class="tools-stat-icon" aria-hidden="true">🎯</span>
+            <span class="tools-stat-label">퀴즈 점수</span>
+          </div>
+          <div class="tools-stat-value">78<span style="font-size:16px;color:var(--text2);">%</span></div>
+          <div class="tools-progress-bar" role="progressbar" aria-valuenow="78" aria-valuemin="0" aria-valuemax="100">
+            <div class="tools-progress-bar__fill" style="width: 78%;"></div>
+          </div>
+          <div class="tools-stat-sub" style="margin-top:6px;">14문제 중 11개 정답</div>
+        </div>
+
+        <div class="tools-stat-card">
+          <div class="tools-stat-header">
+            <span class="tools-stat-icon" aria-hidden="true">🔥</span>
+            <span class="tools-stat-label">연속 학습</span>
+          </div>
+          <div class="tools-stat-value">5</div>
+          <div class="tools-streak-flames" aria-hidden="true">🔥🔥🔥🔥🔥</div>
+          <div class="tools-stat-sub">5일 연속 학습 중!</div>
+        </div>
+      </div>
+
+      <!-- ================================================
+           PANE 4: BOOKMARKS
+           ================================================ -->
+      <div class="tools-pane" id="pane-bookmarks" role="tabpanel" aria-labelledby="tab-bookmarks">
+
+        <p class="tools-section-heading">저장된 응답</p>
+
+        <div class="tools-bookmark-item" role="button" tabindex="0"
+             aria-label="북마크된 메시지로 이동" data-msg-id="msg-3">
+          <div class="tools-bookmark-item__meta">
+            <div class="tools-bookmark-item__dot"></div>
+            <span>오늘 14:22 · 세포 분열</span>
+          </div>
+          <p class="tools-bookmark-item__preview">
+            세포 분열(Cell Division)은 하나의 세포가 두 개의 딸세포로 나뉘는 과정입니다. 진핵세포에서는 유사 분열과 감수 분열이...
+          </p>
+          <span class="tools-bookmark-item__arrow" aria-hidden="true">&#8250;</span>
+        </div>
+
+        <div class="tools-bookmark-item" role="button" tabindex="0"
+             aria-label="북마크된 메시지로 이동" data-msg-id="msg-7">
+          <div class="tools-bookmark-item__meta">
+            <div class="tools-bookmark-item__dot" style="background: var(--accent2);"></div>
+            <span>오늘 14:35 · DNA 복제</span>
+          </div>
+          <p class="tools-bookmark-item__preview">
+            DNA 복제는 반보존적 복제 방식으로 이루어집니다. 각 딸세포는 원본 가닥 하나씩을 받게 됩니다...
+          </p>
+          <span class="tools-bookmark-item__arrow" aria-hidden="true">&#8250;</span>
+        </div>
+
+        <!-- Empty state (hidden when items exist, shown for demo toggle below) -->
+        <div class="tools-empty-state" id="bookmarkEmpty" style="display:none;">
+          <div class="tools-empty-state__icon" aria-hidden="true">🔖</div>
+          <p class="tools-empty-state__title">저장된 응답 없음</p>
+          <p class="tools-empty-state__desc">
+            AI 응답 위에서 북마크 버튼을 클릭하면<br>여기에 저장됩니다.
+          </p>
+        </div>
+      </div>
+
+    </div><!-- /tools-content -->
+  </aside><!-- /tools-panel -->
+
+  <!-- ====================================================
+       JAVASCRIPT
+       ==================================================== -->
+  <script>
+    /* ======================================================
+       NAMESPACE: ToolsPanel
+       Single IIFE — no global pollution, matches StudyBot
+       pattern from project memory.
+       ====================================================== */
+    const ToolsPanel = (() => {
+
+      /* --------------------------------------------------
+         1. TAB SWITCHING
+         -------------------------------------------------- */
+      function initTabs() {
+        const tabs = document.querySelectorAll('.tools-tab');
+        const panes = document.querySelectorAll('.tools-pane');
+
+        tabs.forEach(tab => {
+          tab.addEventListener('click', () => {
+            const target = tab.dataset.tab;
+
+            // Update tab states
+            tabs.forEach(t => {
+              t.classList.remove('tools-tab--active');
+              t.setAttribute('aria-selected', 'false');
+            });
+            tab.classList.add('tools-tab--active');
+            tab.setAttribute('aria-selected', 'true');
+
+            // Update pane visibility
+            panes.forEach(pane => pane.classList.remove('tools-pane--active'));
+            const activePane = document.getElementById('pane-' + target);
+            if (activePane) activePane.classList.add('tools-pane--active');
+          });
+        });
+      }
+
+      /* --------------------------------------------------
+         2. PANEL TOGGLE (collapse / expand)
+         -------------------------------------------------- */
+      function initToggle() {
+        const panel = document.getElementById('toolsPanel');
+        const toggle = document.getElementById('toolsToggle');
+        let isOpen = true;
+
+        toggle.addEventListener('click', () => {
+          isOpen = !isOpen;
+          panel.classList.toggle('tools-panel--collapsed', !isOpen);
+          toggle.setAttribute('aria-expanded', String(isOpen));
+          toggle.querySelector('.tools-toggle__icon').style.transform =
+            isOpen ? '' : 'rotate(0deg)';
+          toggle.setAttribute('aria-label', isOpen ? '도구 패널 닫기' : '도구 패널 열기');
+        });
+      }
+
+      /* --------------------------------------------------
+         3. FLASHCARD
+         -------------------------------------------------- */
+      const cards = [
+        {
+          term:  '유사 분열 (Mitosis)',
+          def:   '체세포가 두 개의 동일한 딸세포로 분열하는 과정.\nG1 → S → G2 → M 단계로 구성.'
+        },
+        {
+          term:  '감수 분열 (Meiosis)',
+          def:   '생식세포 형성을 위한 분열. 2회 분열로 4개의 반수체(n) 세포 생성. 유전적 다양성 발생.'
+        },
+        {
+          term:  '방추사 (Spindle Fiber)',
+          def:   '분열 중기에 형성되는 단백질 구조물.\n염색체를 양극으로 끌어당기는 역할을 한다.'
+        }
+      ];
+
+      let currentCard = 0;
+      let isFlipped = false;
+
+      function renderCard() {
+        const card = cards[currentCard];
+        document.getElementById('fcTerm').textContent = card.term;
+        document.getElementById('fcDef').textContent = card.def;
+        document.getElementById('fcCounter').textContent =
+          (currentCard + 1) + ' / ' + cards.length;
+
+        // Dots
+        cards.forEach((_, i) => {
+          const dot = document.getElementById('fcDot' + i);
+          if (!dot) return;
+          dot.className = 'tools-fc-dot';
+          if (i === currentCard) dot.classList.add('tools-fc-dot--active');
+          else if (i < currentCard) dot.classList.add('tools-fc-dot--done');
+        });
+
+        // Prev button
+        document.getElementById('fcPrev').disabled = (currentCard === 0);
+      }
+
+      function flipCard() {
+        isFlipped = !isFlipped;
+        document.getElementById('flashcard')
+          .classList.toggle('tools-flashcard--flipped', isFlipped);
+      }
+
+      function initFlashcard() {
+        renderCard();
+
+        const card = document.getElementById('flashcard');
+        card.addEventListener('click', flipCard);
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            flipCard();
+          }
+        });
+
+        document.getElementById('fcNext').addEventListener('click', () => {
+          if (currentCard < cards.length - 1) {
+            currentCard++;
+            isFlipped = false;
+            document.getElementById('flashcard')
+              .classList.remove('tools-flashcard--flipped');
+            renderCard();
+          }
+        });
+
+        document.getElementById('fcPrev').addEventListener('click', () => {
+          if (currentCard > 0) {
+            currentCard--;
+            isFlipped = false;
+            document.getElementById('flashcard')
+              .classList.remove('tools-flashcard--flipped');
+            renderCard();
+          }
+        });
+      }
+
+      /* --------------------------------------------------
+         4. POMODORO TIMER
+         -------------------------------------------------- */
+      const STUDY_SEC  = 25 * 60;
+      const BREAK_SEC  = 5  * 60;
+      const CIRCUMFERENCE = 2 * Math.PI * 70; // r = 70 → 439.82
+
+      let timerSeconds   = STUDY_SEC;
+      let timerRunning   = false;
+      let timerInterval  = null;
+      let isBreak        = false;
+      let sessionsToday  = 0;
+      const MAX_SESSIONS = 4;
+
+      function timerOffset(seconds, total) {
+        const progress = seconds / total;
+        // Full circle = 0 offset; empty = full circumference
+        return CIRCUMFERENCE * (1 - progress);
+      }
+
+      function renderTimer() {
+        const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+        const s = String(timerSeconds % 60).padStart(2, '0');
+        document.getElementById('timerDisplay').textContent = m + ':' + s;
+
+        const total = isBreak ? BREAK_SEC : STUDY_SEC;
+        const arc = document.getElementById('timerArc');
+        arc.style.strokeDashoffset = timerOffset(timerSeconds, total);
+
+        const wrap = document.getElementById('timerWrap');
+        wrap.classList.toggle('tools-timer--break', isBreak);
+
+        document.getElementById('timerMode').textContent =
+          isBreak ? '휴식 시간' : '집중 시간';
+      }
+
+      function renderSessions() {
+        const dots = document.querySelectorAll('.tools-timer-session-dot');
+        dots.forEach((dot, i) => {
+          dot.classList.toggle('tools-timer-session-dot--done', i < sessionsToday);
+        });
+        document.getElementById('sessionCount').textContent =
+          sessionsToday + ' / ' + MAX_SESSIONS;
+      }
+
+      function timerTick() {
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          timerRunning = false;
+
+          if (!isBreak) {
+            // Study session done
+            sessionsToday = Math.min(sessionsToday + 1, MAX_SESSIONS);
+            renderSessions();
+          }
+
+          // Switch mode
+          isBreak = !isBreak;
+          timerSeconds = isBreak ? BREAK_SEC : STUDY_SEC;
+          renderTimer();
+
+          document.getElementById('timerToggle').textContent = '▶ 시작';
+          return;
+        }
+
+        timerSeconds--;
+        renderTimer();
+      }
+
+      function initTimer() {
+        renderTimer();
+        renderSessions();
+
+        document.getElementById('timerToggle').addEventListener('click', () => {
+          if (timerRunning) {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            document.getElementById('timerToggle').textContent = '▶ 시작';
+          } else {
+            timerInterval = setInterval(timerTick, 1000);
+            timerRunning = true;
+            document.getElementById('timerToggle').textContent = '⏸ 일시정지';
+          }
+        });
+
+        document.getElementById('timerReset').addEventListener('click', () => {
+          clearInterval(timerInterval);
+          timerRunning = false;
+          isBreak = false;
+          timerSeconds = STUDY_SEC;
+          renderTimer();
+          document.getElementById('timerToggle').textContent = '▶ 시작';
+        });
+      }
+
+      /* --------------------------------------------------
+         5. BOOKMARKS – click-to-jump
+         -------------------------------------------------- */
+      function initBookmarks() {
+        document.querySelectorAll('.tools-bookmark-item').forEach(item => {
+          const activate = () => {
+            const msgId = item.dataset.msgId;
+            const target = document.getElementById(msgId);
+            if (target) {
+              target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              target.style.outline = '2px solid var(--accent)';
+              setTimeout(() => { target.style.outline = ''; }, 1500);
+            }
+            // Demo feedback: flash the item
+            item.style.borderColor = 'var(--accent)';
+            setTimeout(() => { item.style.borderColor = ''; }, 800);
+          };
+
+          item.addEventListener('click', activate);
+          item.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              activate();
+            }
+          });
+        });
+      }
+
+      /* --------------------------------------------------
+         PUBLIC INIT
+         -------------------------------------------------- */
+      function init() {
+        initTabs();
+        initToggle();
+        initFlashcard();
+        initTimer();
+        initBookmarks();
+      }
+
+      return { init };
+    })();
+
+    document.addEventListener('DOMContentLoaded', ToolsPanel.init);
+  </script>
+</body>
+</html>

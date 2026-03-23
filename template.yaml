@@ -1,0 +1,819 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  StudyBot Enhanced - AI Learning Assistant Chatbot
+  Kookmin University AWS Capstone Project
+
+# ---------------------------------------------------------------------------
+# Parameters
+# ---------------------------------------------------------------------------
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, prod]
+    Description: Deployment environment
+
+  ProjectName:
+    Type: String
+    Default: studybot
+    Description: Project name used as prefix for resources
+
+  BedrockModelId:
+    Type: String
+    Default: anthropic.claude-3-haiku-20240307-v1:0
+    Description: Bedrock foundation model ID for chat
+
+  EmbeddingModelId:
+    Type: String
+    Default: amazon.titan-embed-text-v2:0
+    Description: Bedrock embedding model ID
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures: [arm64]
+    Tracing: Active
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref Environment
+        PROJECT_NAME: !Ref ProjectName
+        POWERTOOLS_SERVICE_NAME: !Ref ProjectName
+        LOG_LEVEL: INFO
+    Tags:
+      Project: !Ref ProjectName
+      Environment: !Ref Environment
+
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
+Resources:
+
+  # =========================================================================
+  # Cognito
+  # =========================================================================
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${ProjectName}-${Environment}-user-pool
+      AutoVerifiedAttributes: [email]
+      UsernameAttributes: [email]
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: false
+        - Name: name
+          Required: true
+          Mutable: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub ${ProjectName}-${Environment}-web-client
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+      SupportedIdentityProviders: [COGNITO]
+
+  IdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName: !Sub ${ProjectName}-${Environment}-identity-pool
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ClientId: !Ref UserPoolClient
+          ProviderName: !GetAtt UserPool.ProviderName
+
+  # =========================================================================
+  # S3 Buckets
+  # =========================================================================
+  PdfBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${ProjectName}-${Environment}-pdf-storage-${AWS::AccountId}
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT, POST]
+            AllowedOrigins: ['*']
+            MaxAge: 3600
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: CleanupIncompleteUploads
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+            Status: Enabled
+
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${ProjectName}-${Environment}-frontend-${AWS::AccountId}
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontOAC
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${FrontendBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/*
+
+  # =========================================================================
+  # DynamoDB Tables
+  # =========================================================================
+  ChatHistoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ProjectName}-${Environment}-chat-history
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  QuizResultsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ProjectName}-${Environment}-quiz-results
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: quizId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: quizId
+          KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  DocumentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ProjectName}-${Environment}-documents
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: documentId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: documentId
+          KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # =========================================================================
+  # API Gateway
+  # =========================================================================
+  StudyBotApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${ProjectName}-${Environment}-api
+      StageName: !Ref Environment
+      TracingEnabled: true
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key'"
+        AllowOrigin: "'*'"
+      Auth:
+        DefaultAuthorizer: CognitoAuth
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          CognitoAuth:
+            UserPoolArn: !GetAtt UserPool.Arn
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+
+  # =========================================================================
+  # Lambda Functions
+  # =========================================================================
+
+  # --- Shared Layer ---
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub ${ProjectName}-${Environment}-shared
+      Description: Shared utilities for StudyBot lambdas
+      ContentUri: backend/shared/
+      CompatibleRuntimes: [python3.12]
+      CompatibleArchitectures: [arm64]
+    Metadata:
+      BuildMethod: python3.12
+
+  # --- Upload Presign ---
+  UploadPresignFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-upload-presign
+      Handler: presign.handler
+      CodeUri: backend/upload/
+      MemorySize: 128
+      Timeout: 10
+      Layers: [!Ref SharedLayer]
+      Environment:
+        Variables:
+          PDF_BUCKET: !Ref PdfBucket
+          DOCUMENTS_TABLE: !Ref DocumentsTable
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref PdfBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DocumentsTable
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref StudyBotApi
+            Path: /upload/presign
+            Method: POST
+
+  # --- Upload Complete ---
+  UploadCompleteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-upload-complete
+      Handler: complete.handler
+      CodeUri: backend/upload/
+      MemorySize: 256
+      Timeout: 30
+      Layers: [!Ref SharedLayer]
+      Environment:
+        Variables:
+          PDF_BUCKET: !Ref PdfBucket
+          DOCUMENTS_TABLE: !Ref DocumentsTable
+          STATE_MACHINE_ARN: !Ref PdfProcessingStateMachine
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DocumentsTable
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt PdfProcessingStateMachine.Name
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref StudyBotApi
+            Path: /upload/complete
+            Method: POST
+
+  # --- Chat (RAG) ---
+  ChatFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-chat
+      Handler: handler.handler
+      CodeUri: backend/chat/
+      MemorySize: 512
+      Timeout: 29
+      Layers: [!Ref SharedLayer]
+      Environment:
+        Variables:
+          CHAT_HISTORY_TABLE: !Ref ChatHistoryTable
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          EMBEDDING_MODEL_ID: !Ref EmbeddingModelId
+          KNOWLEDGE_BASE_ID: !Sub "{{resolve:ssm:/${ProjectName}/${Environment}/knowledge-base-id:1}}"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatHistoryTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:Retrieve
+                - bedrock:RetrieveAndGenerate
+              Resource: '*'
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref StudyBotApi
+            Path: /chat
+            Method: POST
+
+  # --- Quiz Generate ---
+  QuizGenerateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-quiz-generate
+      Handler: handler.handler
+      CodeUri: backend/quiz/
+      MemorySize: 512
+      Timeout: 29
+      Layers: [!Ref SharedLayer]
+      Environment:
+        Variables:
+          QUIZ_RESULTS_TABLE: !Ref QuizResultsTable
+          DOCUMENTS_TABLE: !Ref DocumentsTable
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          KNOWLEDGE_BASE_ID: !Sub "{{resolve:ssm:/${ProjectName}/${Environment}/knowledge-base-id:1}}"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref QuizResultsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref DocumentsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:Retrieve
+              Resource: '*'
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref StudyBotApi
+            Path: /quiz/generate
+            Method: POST
+
+  # --- Documents CRUD ---
+  DocumentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-documents
+      Handler: handler.handler
+      CodeUri: backend/documents/
+      MemorySize: 128
+      Timeout: 10
+      Layers: [!Ref SharedLayer]
+      Environment:
+        Variables:
+          DOCUMENTS_TABLE: !Ref DocumentsTable
+          PDF_BUCKET: !Ref PdfBucket
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DocumentsTable
+        - S3ReadPolicy:
+            BucketName: !Ref PdfBucket
+      Events:
+        List:
+          Type: Api
+          Properties:
+            RestApiId: !Ref StudyBotApi
+            Path: /documents
+            Method: GET
+        Get:
+          Type: Api
+          Properties:
+            RestApiId: !Ref StudyBotApi
+            Path: /documents/{documentId}
+            Method: GET
+        Delete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref StudyBotApi
+            Path: /documents/{documentId}
+            Method: DELETE
+
+  # --- Polly TTS ---
+  PollyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-polly
+      Handler: handler.handler
+      CodeUri: backend/polly/
+      MemorySize: 256
+      Timeout: 15
+      Layers: [!Ref SharedLayer]
+      Environment:
+        Variables:
+          PDF_BUCKET: !Ref PdfBucket
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - polly:SynthesizeSpeech
+              Resource: '*'
+        - S3CrudPolicy:
+            BucketName: !Ref PdfBucket
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref StudyBotApi
+            Path: /polly/synthesize
+            Method: POST
+
+  # --- Textract OCR ---
+  TextractFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-textract
+      Handler: handler.handler
+      CodeUri: backend/textract/
+      MemorySize: 256
+      Timeout: 30
+      Layers: [!Ref SharedLayer]
+      Environment:
+        Variables:
+          PDF_BUCKET: !Ref PdfBucket
+          DOCUMENTS_TABLE: !Ref DocumentsTable
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref PdfBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DocumentsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - textract:DetectDocumentText
+                - textract:AnalyzeDocument
+              Resource: '*'
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref StudyBotApi
+            Path: /textract/analyze
+            Method: POST
+
+  # =========================================================================
+  # Step Functions — PDF Processing Pipeline
+  # =========================================================================
+
+  # Lambda functions used by the state machine
+  ValidatePdfFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-validate-pdf
+      Handler: validate.handler
+      CodeUri: backend/processing/
+      MemorySize: 256
+      Timeout: 30
+      Layers: [!Ref SharedLayer]
+      Environment:
+        Variables:
+          PDF_BUCKET: !Ref PdfBucket
+          DOCUMENTS_TABLE: !Ref DocumentsTable
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref PdfBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DocumentsTable
+
+  ExtractTextFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-extract-text
+      Handler: extract.handler
+      CodeUri: backend/processing/
+      MemorySize: 512
+      Timeout: 60
+      Layers: [!Ref SharedLayer]
+      Environment:
+        Variables:
+          PDF_BUCKET: !Ref PdfBucket
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref PdfBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - textract:DetectDocumentText
+                - textract:AnalyzeDocument
+              Resource: '*'
+
+  ChunkTextFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-chunk-text
+      Handler: chunk.handler
+      CodeUri: backend/processing/
+      MemorySize: 256
+      Timeout: 30
+      Layers: [!Ref SharedLayer]
+      Environment:
+        Variables:
+          PDF_BUCKET: !Ref PdfBucket
+
+  EmbedChunksFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-embed-chunks
+      Handler: embed.handler
+      CodeUri: backend/processing/
+      MemorySize: 512
+      Timeout: 120
+      Layers: [!Ref SharedLayer]
+      Environment:
+        Variables:
+          PDF_BUCKET: !Ref PdfBucket
+          EMBEDDING_MODEL_ID: !Ref EmbeddingModelId
+          DOCUMENTS_TABLE: !Ref DocumentsTable
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref PdfBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DocumentsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: '*'
+
+  PdfProcessingStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub ${ProjectName}-${Environment}-pdf-processing
+      DefinitionBody:
+        Comment: PDF processing pipeline - validate, extract, chunk, embed
+        StartAt: ValidatePDF
+        States:
+          ValidatePDF:
+            Type: Task
+            Resource: !GetAtt ValidatePdfFunction.Arn
+            ResultPath: $.validation
+            Next: ExtractText
+            Catch:
+              - ErrorEquals: [States.ALL]
+                Next: ProcessingFailed
+                ResultPath: $.error
+
+          ExtractText:
+            Type: Task
+            Resource: !GetAtt ExtractTextFunction.Arn
+            ResultPath: $.extraction
+            Next: ChunkText
+            Catch:
+              - ErrorEquals: [States.ALL]
+                Next: ProcessingFailed
+                ResultPath: $.error
+
+          ChunkText:
+            Type: Task
+            Resource: !GetAtt ChunkTextFunction.Arn
+            ResultPath: $.chunking
+            Next: EmbedChunks
+            Catch:
+              - ErrorEquals: [States.ALL]
+                Next: ProcessingFailed
+                ResultPath: $.error
+
+          EmbedChunks:
+            Type: Task
+            Resource: !GetAtt EmbedChunksFunction.Arn
+            ResultPath: $.embedding
+            Next: ProcessingSucceeded
+            Catch:
+              - ErrorEquals: [States.ALL]
+                Next: ProcessingFailed
+                ResultPath: $.error
+
+          ProcessingSucceeded:
+            Type: Succeed
+
+          ProcessingFailed:
+            Type: Fail
+            Cause: PDF processing pipeline failed
+            Error: ProcessingError
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ValidatePdfFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ExtractTextFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ChunkTextFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref EmbedChunksFunction
+      Tracing:
+        Enabled: true
+      Tags:
+        Project: !Ref ProjectName
+        Environment: !Ref Environment
+
+  # =========================================================================
+  # CloudWatch Dashboard
+  # =========================================================================
+  StudyBotDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub ${ProjectName}-${Environment}-dashboard
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0, "y": 0, "width": 12, "height": 6,
+              "properties": {
+                "title": "API Gateway Requests",
+                "metrics": [
+                  ["AWS/ApiGateway", "Count", "ApiName", "${ProjectName}-${Environment}-api", {"stat": "Sum"}],
+                  ["AWS/ApiGateway", "4XXError", "ApiName", "${ProjectName}-${Environment}-api", {"stat": "Sum"}],
+                  ["AWS/ApiGateway", "5XXError", "ApiName", "${ProjectName}-${Environment}-api", {"stat": "Sum"}]
+                ],
+                "period": 300,
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12, "y": 0, "width": 12, "height": 6,
+              "properties": {
+                "title": "API Gateway Latency",
+                "metrics": [
+                  ["AWS/ApiGateway", "Latency", "ApiName", "${ProjectName}-${Environment}-api", {"stat": "Average"}],
+                  ["AWS/ApiGateway", "Latency", "ApiName", "${ProjectName}-${Environment}-api", {"stat": "p99"}]
+                ],
+                "period": 300,
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0, "y": 6, "width": 12, "height": 6,
+              "properties": {
+                "title": "Lambda Invocations",
+                "metrics": [
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${ProjectName}-${Environment}-chat", {"stat": "Sum"}],
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${ProjectName}-${Environment}-quiz-generate", {"stat": "Sum"}],
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${ProjectName}-${Environment}-upload-presign", {"stat": "Sum"}],
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${ProjectName}-${Environment}-documents", {"stat": "Sum"}]
+                ],
+                "period": 300,
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12, "y": 6, "width": 12, "height": 6,
+              "properties": {
+                "title": "Lambda Errors",
+                "metrics": [
+                  ["AWS/Lambda", "Errors", "FunctionName", "${ProjectName}-${Environment}-chat", {"stat": "Sum"}],
+                  ["AWS/Lambda", "Errors", "FunctionName", "${ProjectName}-${Environment}-quiz-generate", {"stat": "Sum"}],
+                  ["AWS/Lambda", "Errors", "FunctionName", "${ProjectName}-${Environment}-upload-presign", {"stat": "Sum"}],
+                  ["AWS/Lambda", "Errors", "FunctionName", "${ProjectName}-${Environment}-upload-complete", {"stat": "Sum"}]
+                ],
+                "period": 300,
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0, "y": 12, "width": 12, "height": 6,
+              "properties": {
+                "title": "Lambda Duration (Chat & Quiz)",
+                "metrics": [
+                  ["AWS/Lambda", "Duration", "FunctionName", "${ProjectName}-${Environment}-chat", {"stat": "Average"}],
+                  ["AWS/Lambda", "Duration", "FunctionName", "${ProjectName}-${Environment}-quiz-generate", {"stat": "Average"}]
+                ],
+                "period": 300,
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12, "y": 12, "width": 12, "height": 6,
+              "properties": {
+                "title": "Step Functions Executions",
+                "metrics": [
+                  ["AWS/States", "ExecutionsStarted", "StateMachineArn", "${PdfProcessingStateMachine}", {"stat": "Sum"}],
+                  ["AWS/States", "ExecutionsSucceeded", "StateMachineArn", "${PdfProcessingStateMachine}", {"stat": "Sum"}],
+                  ["AWS/States", "ExecutionsFailed", "StateMachineArn", "${PdfProcessingStateMachine}", {"stat": "Sum"}]
+                ],
+                "period": 300,
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0, "y": 18, "width": 12, "height": 6,
+              "properties": {
+                "title": "DynamoDB Read/Write Capacity",
+                "metrics": [
+                  ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${ProjectName}-${Environment}-chat-history", {"stat": "Sum"}],
+                  ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "${ProjectName}-${Environment}-chat-history", {"stat": "Sum"}],
+                  ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${ProjectName}-${Environment}-documents", {"stat": "Sum"}],
+                  ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "${ProjectName}-${Environment}-documents", {"stat": "Sum"}]
+                ],
+                "period": 300,
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12, "y": 18, "width": 12, "height": 6,
+              "properties": {
+                "title": "Cognito Sign-in Metrics",
+                "metrics": [
+                  ["AWS/Cognito", "SignInSuccesses", "UserPool", "${UserPool}", {"stat": "Sum"}],
+                  ["AWS/Cognito", "TokenRefreshSuccesses", "UserPool", "${UserPool}", {"stat": "Sum"}]
+                ],
+                "period": 300,
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            }
+          ]
+        }
+
+# ---------------------------------------------------------------------------
+# Outputs
+# ---------------------------------------------------------------------------
+Outputs:
+  ApiGatewayUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${StudyBotApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref UserPool
+
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref UserPoolClient
+
+  IdentityPoolId:
+    Description: Cognito Identity Pool ID
+    Value: !Ref IdentityPool
+
+  PdfBucketName:
+    Description: S3 bucket for PDF storage
+    Value: !Ref PdfBucket
+
+  FrontendBucketName:
+    Description: S3 bucket for frontend hosting
+    Value: !Ref FrontendBucket
+
+  StateMachineArn:
+    Description: PDF processing Step Functions state machine ARN
+    Value: !Ref PdfProcessingStateMachine
+
+  CloudFrontDistribution:
+    Description: CloudFront distribution URL (placeholder - configure after deployment)
+    Value: !Sub https://${FrontendBucket}.s3-website-${AWS::Region}.amazonaws.com

@@ -204,6 +204,15 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .bm-item:hover{border-color:var(--accent);background:rgba(59,130,246,0.05)}
 .bm-empty{text-align:center;padding:30px 16px;color:var(--text2);font-size:.8rem}
 
+/* Toast Notifications */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{pointer-events:auto;background:var(--surface);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border);padding:10px 16px;border-radius:10px;font-size:.82rem;color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,.25);animation:toastIn .3s ease forwards;max-width:280px}
+.toast.success{border-left:3px solid var(--green)}
+.toast.info{border-left:3px solid var(--accent)}
+.toast.warn{border-left:3px solid var(--orange)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(40px)}}
+
 /* Mind Map */
 .mm-svg{width:100%;display:block}
 @keyframes mmDraw{to{stroke-dashoffset:0}}
@@ -418,6 +427,7 @@ function ts(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+S
 function genId(){return 'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
 function escHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function sanitizeHtml(h){var el=document.createElement('div');el.innerHTML=h;var ok={STRONG:1,BR:1,TABLE:1,TR:1,TH:1,TD:1,SPAN:1,CODE:1,B:1,I:1,EM:1,A:1};(function walk(n){var ch=Array.prototype.slice.call(n.childNodes);for(var i=0;i<ch.length;i++){var c=ch[i];if(c.nodeType===1){if(!ok[c.tagName]){while(c.firstChild)n.insertBefore(c.firstChild,c);n.removeChild(c)}else{var at=Array.prototype.slice.call(c.attributes);for(var j=0;j<at.length;j++){var an=at[j].name;if(c.tagName==='A'&&(an==='href'||an==='target'||an==='rel')){if(an==='href'&&!/^https?:\/\//.test(at[j].value))c.removeAttribute(an)}else c.removeAttribute(an)}walk(c)}}else if(c.nodeType!==3)n.removeChild(c)}})(el);return el.innerHTML}
+function showToast(msg,type){var box=$('toastBox');if(!box)return;var t=document.createElement('div');t.className='toast '+(type||'info');t.textContent=msg;box.appendChild(t);setTimeout(function(){t.style.animation='toastOut .3s ease forwards'},2700);setTimeout(function(){t.remove()},3000)}
 function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(t).catch(function(){});var ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}ta.remove();return Promise.resolve()}
 function scrollMsg(){if(scrollQueued)return;scrollQueued=true;requestAnimationFrame(function(){var m=$('msgsArea');if(m)m.scrollTop=m.scrollHeight;scrollQueued=false})}
 
@@ -491,10 +501,10 @@ function addBot(t,s,c,doStream,conf){
     var acts=document.createElement('div');acts.className='msg-acts';
     acts.innerHTML='<button class="msg-act" type="button" aria-label="복사" title="복사">\uD83D\uDCCB</button><button class="msg-act" type="button" aria-label="좋아요" title="좋아요">\uD83D\uDC4D</button><button class="msg-act" type="button" aria-label="싫어요" title="싫어요">\uD83D\uDC4E</button><button class="msg-act" type="button" aria-label="저장" title="저장">\uD83D\uDD16</button>';
     var btns=acts.querySelectorAll('.msg-act');
-    btns[0].addEventListener('click',function(){copyText(txt.textContent).then(function(){btns[0].textContent='\u2705';setTimeout(function(){btns[0].textContent='\uD83D\uDCCB'},1200)})});
+    btns[0].addEventListener('click',function(){copyText(txt.textContent).then(function(){btns[0].textContent='\u2705';showToast('\uBA54\uC2DC\uC9C0 \uBCF5\uC0AC\uB428','success');setTimeout(function(){btns[0].textContent='\uD83D\uDCCB'},1200)})});
     btns[1].addEventListener('click',function(){btns[1].classList.toggle('liked');btns[2].classList.remove('disliked')});
     btns[2].addEventListener('click',function(){btns[2].classList.toggle('disliked');btns[1].classList.remove('liked')});
-    btns[3].addEventListener('click',function(){addBookmark(t.replace(/<[^>]+>/g,'').slice(0,60)+'...');btns[3].textContent='\u2705';setTimeout(function(){btns[3].textContent='\uD83D\uDD16'},1200)});
+    btns[3].addEventListener('click',function(){addBookmark(t.replace(/<[^>]+>/g,'').slice(0,60)+'...');btns[3].textContent='\u2705';showToast('\uBD81\uB9C8\uD06C\uC5D0 \uC800\uC7A5\uB428','success');setTimeout(function(){btns[3].textContent='\uD83D\uDD16'},1200)});
     body.appendChild(acts);
     if(c&&c.length){var cw=document.createElement('div');cw.className='chips';c.forEach(function(x){var b=document.createElement('button');b.className='chip';b.textContent=x;b.onclick=function(){rmChips();handle(x)};cw.appendChild(b)});$('msgsInner').appendChild(cw)}
     scrollMsg();pushMsg('b',t);busy=false
@@ -666,8 +676,8 @@ function send(){var t=inp.value.trim();if(!t||busy)return;inp.value='';inp.style
 
 $('newChatBtn').addEventListener('click',function(){newConvo()});
 $('themeBtn').addEventListener('click',function(){setTheme(theme==='dark'?'light':'dark')});
-$('exportBtn').addEventListener('click',function(){var c=getActive();if(!c||!c.msgs.length)return;var t='=== StudyBot \u2014 '+c.title+' ===\n\n';c.msgs.forEach(function(m){t+=(m.r==='u'?'\uD83D\uDC64 ':'\uD83E\uDD16 ')+m.t.replace(/<[^>]+>/g,'')+'\n\n'});copyText(t);$('exportBtn').textContent='\u2705';setTimeout(function(){$('exportBtn').textContent='\uD83D\uDCCB'},1200)});
-$('clearBtn').addEventListener('click',function(){var c=getActive();if(!c||!c.msgs.length)return;if(confirm('\uD83D\uDDD1 초기화?')){c.msgs=[];saveStore();resetView()}});
+$('exportBtn').addEventListener('click',function(){var c=getActive();if(!c||!c.msgs.length)return;var t='=== StudyBot \u2014 '+c.title+' ===\n\n';c.msgs.forEach(function(m){t+=(m.r==='u'?'\uD83D\uDC64 ':'\uD83E\uDD16 ')+m.t.replace(/<[^>]+>/g,'')+'\n\n'});copyText(t);$('exportBtn').textContent='\u2705';showToast('\uD074\uB9BD\uBCF4\uB4DC\uC5D0 \uBCF5\uC0AC\uB428','success');setTimeout(function(){$('exportBtn').textContent='\uD83D\uDCCB'},1200)});
+$('clearBtn').addEventListener('click',function(){var c=getActive();if(!c||!c.msgs.length)return;if(confirm('\uD83D\uDDD1 초기화?')){c.msgs=[];saveStore();resetView();showToast('\uB300\uD654\uAC00 \uCD08\uAE30\uD654\uB418\uC5C8\uC2B5\uB2C8\uB2E4','info')}});
 $('uploadBtn').addEventListener('click',function(){if(!busy){busy=true;doUpload()}});
 $('menuBtn').addEventListener('click',function(){$('panelLeft').classList.toggle('open');$('overlay').classList.toggle('show')});
 $('overlay').addEventListener('click',function(){$('panelLeft').classList.remove('open');$('panelRight').classList.remove('open');$('overlay').classList.remove('show')});
@@ -681,6 +691,7 @@ handle.addEventListener('dblclick',function(){panel.style.width='';renderMindmap
 })();
 })();
 </script>
+<div class="toast-container" id="toastBox"></div>
 <noscript><div style="padding:40px;text-align:center;color:#e2e8f0;background:#0a0e1a;height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif">이 앱은 JavaScript가 필요합니다.</div></noscript>
 </body>
 </html>

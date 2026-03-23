@@ -221,6 +221,22 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
 @keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(40px)}}
 
+/* Search Overlay */
+.search-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);z-index:100;display:none;align-items:flex-start;justify-content:center;padding-top:15vh}
+.search-overlay.show{display:flex}
+.search-box{width:420px;max-width:90vw;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.4);overflow:hidden;animation:msgSlideIn .25s ease}
+.search-input{width:100%;padding:14px 16px;border:none;background:none;color:var(--text);font-size:.95rem;font-family:inherit;outline:none}
+.search-input::placeholder{color:var(--text2)}
+.search-results{max-height:300px;overflow-y:auto;border-top:1px solid var(--border)}
+.search-result{padding:10px 16px;cursor:pointer;transition:background .1s;border-bottom:1px solid rgba(51,65,85,.15)}
+.search-result:hover,.search-result.active{background:rgba(59,130,246,.1)}
+.search-result-role{font-size:.65rem;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:2px}
+.search-result-text{font-size:.8rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-result mark{background:rgba(59,130,246,.25);color:var(--accent);border-radius:2px;padding:0 2px}
+.search-empty{padding:20px 16px;text-align:center;color:var(--text2);font-size:.82rem}
+.search-hint{padding:8px 16px;font-size:.65rem;color:var(--text2);border-top:1px solid var(--border);display:flex;justify-content:space-between}
+.search-hint kbd{padding:1px 5px;border-radius:3px;border:1px solid var(--border);background:var(--card);font-family:inherit;font-size:.6rem}
+
 /* Mind Map */
 .mm-svg{width:100%;display:block}
 @keyframes mmDraw{to{stroke-dashoffset:0}}
@@ -697,8 +713,41 @@ document.addEventListener('mousemove',function(e){if(!dragging)return;var w=star
 document.addEventListener('mouseup',function(){if(!dragging)return;dragging=false;handle.classList.remove('active');document.body.style.cursor='';document.body.style.userSelect=''});
 handle.addEventListener('dblclick',function(){panel.style.width='';renderMindmap()})
 })();
+// ══════ SEARCH (Ctrl+K) ══════
+(function(){
+  var ov=$('searchOverlay'),inp=$('searchInput'),res=$('searchResults'),activeIdx=-1;
+  if(!ov||!inp)return;
+  function openSearch(){ov.classList.add('show');inp.value='';res.innerHTML='<div class="search-empty">검색어를 입력하세요</div>';inp.focus();activeIdx=-1}
+  function closeSearch(){ov.classList.remove('show');inp.value=''}
+  function doSearch(){
+    var q=inp.value.trim().toLowerCase();if(!q){res.innerHTML='<div class="search-empty">검색어를 입력하세요</div>';return}
+    var c=getActive();if(!c||!c.msgs.length){res.innerHTML='<div class="search-empty">대화가 없습니다</div>';return}
+    var hits=[];
+    c.msgs.forEach(function(m,i){var plain=m.t.replace(/<[^>]+>/g,'');if(plain.toLowerCase().indexOf(q)!==-1)hits.push({i:i,r:m.r,t:plain})});
+    if(!hits.length){res.innerHTML='<div class="search-empty">결과 없음</div>';return}
+    activeIdx=-1;
+    res.innerHTML=hits.map(function(h,j){
+      var preview=h.t.slice(0,80);var re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+      preview=escHtml(preview).replace(re,'<mark>$1</mark>');
+      return '<div class="search-result" data-idx="'+h.i+'"><div class="search-result-role">'+(h.r==='u'?'나':'StudyBot')+'</div><div class="search-result-text">'+preview+'</div></div>'
+    }).join('');
+    res.querySelectorAll('.search-result').forEach(function(el){el.addEventListener('click',function(){goToMsg(parseInt(el.dataset.idx));closeSearch()})});
+  }
+  function goToMsg(idx){var msgs=$('msgsInner');if(!msgs)return;var nodes=msgs.querySelectorAll('.msg');if(nodes[idx]){nodes[idx].scrollIntoView({behavior:'smooth',block:'center'});nodes[idx].style.outline='2px solid var(--accent)';setTimeout(function(){nodes[idx].style.outline=''},2000)}}
+  function navResults(dir){var items=res.querySelectorAll('.search-result');if(!items.length)return;items.forEach(function(el){el.classList.remove('active')});activeIdx=Math.max(0,Math.min(activeIdx+dir,items.length-1));items[activeIdx].classList.add('active');items[activeIdx].scrollIntoView({block:'nearest'})}
+  document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();ov.classList.contains('show')?closeSearch():openSearch()}if(!ov.classList.contains('show'))return;if(e.key==='Escape')closeSearch();if(e.key==='ArrowDown'){e.preventDefault();navResults(1)}if(e.key==='ArrowUp'){e.preventDefault();navResults(-1)}if(e.key==='Enter'){e.preventDefault();var act=res.querySelector('.search-result.active');if(act){goToMsg(parseInt(act.dataset.idx));closeSearch()}}});
+  inp.addEventListener('input',doSearch);
+  ov.addEventListener('click',function(e){if(e.target===ov)closeSearch()});
+})();
 })();
 </script>
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-box">
+    <input class="search-input" id="searchInput" type="text" placeholder="대화 검색... (Ctrl+K)" autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
+    <div class="search-hint"><span><kbd>↑↓</kbd> 이동 <kbd>Enter</kbd> 선택</span><span><kbd>Esc</kbd> 닫기</span></div>
+  </div>
+</div>
 <div class="toast-container" id="toastBox"></div>
 <noscript><div style="padding:40px;text-align:center;color:#e2e8f0;background:#0a0e1a;height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif">이 앱은 JavaScript가 필요합니다.</div></noscript>
 </body>

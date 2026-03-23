@@ -190,6 +190,10 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .send-btn:disabled{background:var(--border);cursor:not-allowed;opacity:.4}
 .send-btn svg{width:18px;height:18px;fill:#fff}
 .input-hint{font-size:.65rem;color:var(--text2);margin-top:4px;text-align:center}
+.suggest-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.suggest-bar:empty{display:none}
+.suggest-chip{padding:4px 12px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text2);font-size:.72rem;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
+.suggest-chip:hover{border-color:var(--accent);color:var(--accent);background:rgba(59,130,246,.08)}
 .input-hint kbd{padding:1px 4px;border-radius:3px;border:1px solid var(--border);background:var(--card);font-family:inherit;font-size:.62rem}
 
 /* Command popup */
@@ -355,6 +359,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
   <div class="input-area">
     <div class="input-wrap">
       <div class="cmd-popup" id="cmdPopup"></div>
+      <div class="suggest-bar" id="suggestBar"></div>
       <div class="input-row">
         <textarea class="chat-input" id="chatInput" rows="1" placeholder="문서에 대해 질문하세요... ( / 명령어)"></textarea>
         <button class="send-btn" id="sendBtn" disabled aria-label="전송">
@@ -491,7 +496,8 @@ function renderWelcome(){
   el.innerHTML=Object.keys(domains).map(function(k){var d=domains[k];var qs=Object.keys(d.R);return '<div class="welcome-domain" data-d="'+k+'" data-q="'+qs[0]+'"><div class="welcome-domain-icon">'+d.icon+'</div><h4>'+d.name+'</h4><p>'+d.doc+'</p></div>'}).join('');
   el.querySelectorAll('.welcome-domain').forEach(function(c){c.addEventListener('click',function(){switchDomain(c.dataset.d);handle(c.dataset.q)})});
 }
-function switchDomain(d){curDomain=d;saveStore();renderDomainBar();renderDocs();$('topTitle').textContent=domains[d].name;renderMindmap()}
+function switchDomain(d){curDomain=d;saveStore();renderDomainBar();renderDocs();$('topTitle').textContent=domains[d].name;renderMindmap();renderSuggestions()}
+function renderSuggestions(){var bar=$('suggestBar');if(!bar)return;var d=domains[curDomain];if(!d){bar.innerHTML='';return}var qs=Object.keys(d.R).slice(0,3);bar.innerHTML=qs.map(function(q){return '<button class="suggest-chip" type="button">'+escHtml(q.length>20?q.slice(0,18)+'..':q)+'</button>'}).join('')+'<button class="suggest-chip" type="button" style="color:var(--cyan)">\uD83C\uDFA5 추천</button><button class="suggest-chip" type="button" style="color:var(--accent2)">\uD83E\uDDE0 맵</button>';bar.querySelectorAll('.suggest-chip').forEach(function(b,i){b.addEventListener('click',function(){if(i<qs.length)handle(qs[i]);else if(b.textContent.indexOf('추천')!==-1)handle('추천해줘');else handle('마인드맵');bar.innerHTML=''})})}
 function loadMsgs(){
   cancelStream();busy=false;var c=getActive();if(!c)return;
   $('msgsInner').innerHTML='';
@@ -690,12 +696,12 @@ $('mmReset').addEventListener('click',function(){
 });
 
 // ══════ INIT ══════
-loadStore();setTheme(theme);renderConvos();renderDomainBar();renderDocs();renderWelcome();renderMindmap();
+loadStore();setTheme(theme);renderConvos();renderDomainBar();renderDocs();renderWelcome();renderMindmap();renderSuggestions();
 var initC=getActive();if(initC&&initC.msgs.length){curDomain=initC.domain||'bio';loadMsgs()}
 $('topTitle').textContent=domains[curDomain].name;
 
 var inp=$('chatInput'),sendBtn=$('sendBtn');
-inp.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,140)+'px';sendBtn.disabled=!this.value.trim();var v=this.value;if(v.startsWith('/')){var pop=$('cmdPopup');var matches=slashCmds.filter(function(c){return c.c.indexOf(v)===0});if(matches.length){pop.innerHTML=matches.map(function(c){return '<div class="cmd-item" data-cmd="'+c.c+'">'+c.i+' <strong style="color:var(--accent)">'+c.c+'</strong> <span style="color:var(--text2);font-size:.78rem">'+c.d+'</span></div>'}).join('');pop.classList.add('show');pop.querySelectorAll('.cmd-item').forEach(function(el){el.addEventListener('click',function(){inp.value='';pop.classList.remove('show');handle(el.dataset.cmd)})})}else pop.classList.remove('show')}else $('cmdPopup').classList.remove('show')});
+inp.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,140)+'px';sendBtn.disabled=!this.value.trim();if(this.value.trim())$('suggestBar').innerHTML='';else renderSuggestions();var v=this.value;if(v.startsWith('/')){var pop=$('cmdPopup');var matches=slashCmds.filter(function(c){return c.c.indexOf(v)===0});if(matches.length){pop.innerHTML=matches.map(function(c){return '<div class="cmd-item" data-cmd="'+c.c+'">'+c.i+' <strong style="color:var(--accent)">'+c.c+'</strong> <span style="color:var(--text2);font-size:.78rem">'+c.d+'</span></div>'}).join('');pop.classList.add('show');pop.querySelectorAll('.cmd-item').forEach(function(el){el.addEventListener('click',function(){inp.value='';pop.classList.remove('show');handle(el.dataset.cmd)})})}else pop.classList.remove('show')}else $('cmdPopup').classList.remove('show')});
 inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}if(e.key==='Escape')$('cmdPopup').classList.remove('show')});
 sendBtn.addEventListener('click',send);
 function send(){var t=inp.value.trim();if(!t||busy)return;inp.value='';inp.style.height='auto';sendBtn.disabled=true;$('cmdPopup').classList.remove('show');handle(t)}

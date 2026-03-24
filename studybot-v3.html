@@ -430,6 +430,7 @@ input, textarea { font-family: inherit; color: inherit; }
   padding: 0 4px;
 }
 .msg-time { font-size: 11px; color: var(--text-tertiary); }
+.msg-read { font-size: 10px; color: var(--accent); margin-left: 6px; opacity: .7; }
 .msg-conf {
   font-size: 10px;
   padding: 2px 8px;
@@ -1640,9 +1641,11 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
         '<div class="msg-conf-bar"><div class="msg-conf-fill" style="width:' + m.conf + '%;background:' + confColor + '"></div></div>';
     }
 
+    var readReceipt = '';
+    if (isUser) { var convo = getActive(); if (convo && convo.msgs[idx+1] && convo.msgs[idx+1].role === 'bot') readReceipt = '<span class="msg-read">✓✓ 읽음</span>'; }
     var isBookmarked = store.bookmarks && store.bookmarks.indexOf(idx) !== -1;
     var metaHtml = '<div class="msg-meta">' +
-      '<span class="msg-time">' + (m.ts ? relativeTime(m.ts) : (m.time || '')) + '</span>' +
+      '<span class="msg-time">' + (m.ts ? relativeTime(m.ts) : (m.time || '')) + '</span>' + readReceipt +
       confHtml +
       '<div class="msg-actions">' +
         (!isUser ? '<button class="msg-action-btn' + (isBookmarked ? ' bookmarked' : '') + '" data-action="bookmark" data-idx="' + idx + '" title="북마크">\uD83D\uDD16</button>' : '') +

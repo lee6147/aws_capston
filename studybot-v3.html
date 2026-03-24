@@ -1053,7 +1053,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   <div class="search-card">
     <div class="search-input-row">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input type="text" id="searchInput" placeholder="Search messages..." autocomplete="off">
+      <input type="text" id="searchInput" placeholder="대화 검색..." autocomplete="off">
     </div>
     <div class="search-results" id="searchResults"></div>
     <div class="search-hint">
@@ -1136,7 +1136,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     <div class="shortcut-row"><span class="shortcut-label">Shortcuts help</span><div class="shortcut-keys"><span class="shortcut-key">Ctrl</span><span class="shortcut-key">/</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">Focus mode</span><div class="shortcut-keys"><span class="shortcut-key">Alt</span><span class="shortcut-key">Z</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">Domain 1-6</span><div class="shortcut-keys"><span class="shortcut-key">Alt</span><span class="shortcut-key">1-6</span></div></div>
-    <div class="shortcut-row"><span class="shortcut-label">Send message</span><div class="shortcut-keys"><span class="shortcut-key">Enter</span></div></div>
+    <div class="shortcut-row"><span class="shortcut-label">메시지 전송</span><div class="shortcut-keys"><span class="shortcut-key">Enter</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">New line</span><div class="shortcut-keys"><span class="shortcut-key">Shift</span><span class="shortcut-key">Enter</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">New conversation</span><div class="shortcut-keys"><span class="shortcut-key">Ctrl</span><span class="shortcut-key">N</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">Quick notes</span><div class="shortcut-keys"><span class="shortcut-key">Ctrl</span><span class="shortcut-key">.</span></div></div>
@@ -1246,7 +1246,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       <div class="input-row">
         <div class="input-wrap" id="inputWrap">
           <div class="slash-menu" id="slashMenu"></div>
-          <textarea id="chatInput" rows="1" placeholder="Ask a question or type / for commands..." aria-label="Chat input"></textarea>
+          <textarea id="chatInput" rows="1" placeholder="질문을 입력하세요... ( / 명령어)" aria-label="Chat input"></textarea>
           <div class="input-btns">
             <button class="input-icon-btn" id="voiceBtn" title="Voice input">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
@@ -1512,7 +1512,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       return (store.convos[b].updated || 0) - (store.convos[a].updated || 0);
     });
     if (ids.length === 0) {
-      el.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--text-tertiary);font-size:13px;">No conversations yet.<br>Start by asking a question!</div>';
+      el.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--text-tertiary);font-size:13px;">대화가 없습니다.<br>질문을 입력해 시작하세요!</div>';
       return;
     }
     var now = Date.now();
@@ -1535,7 +1535,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
         var pinHtml = c.pinned ? '<span class="convo-pin" title="Pinned">\uD83D\uDCCC</span>' : '';
         html += '<div class="convo-item' + (id === activeId ? ' active' : '') + '" data-id="' + id + '">' +
           '<span class="convo-icon">' + (domains[c.domain] ? domains[c.domain].icon : '\uD83D\uDCAC') + '</span>' +
-          '<span class="convo-title">' + escHtml(c.title || 'New Chat') + '</span>' +
+          '<span class="convo-title">' + escHtml(c.title || '새 대화') + '</span>' +
           pinHtml +
           '<div class="convo-actions">' +
             '<button class="convo-action-btn" data-action="pin" data-id="' + id + '" title="' + (c.pinned ? 'Unpin' : 'Pin') + '">\uD83D\uDCCC</button>' +
@@ -1585,16 +1585,18 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   function renderWelcome(inner) {
     var d = domains[curDomain];
     var tip = dailyTips[Math.floor(Math.random() * dailyTips.length)];
+    var h = new Date().getHours();
+    var greeting = h<6?'🌙 밤늦게 공부하는 당신, 멋져요!':h<12?'☀️ 좋은 아침이에요! StudyBot입니다':h<18?'🌤 좋은 오후예요! StudyBot입니다':'🌙 좋은 저녁이에요! StudyBot입니다';
     var sugs = d ? d.qa.map(function(q) { return q.q; }) : [];
     inner.innerHTML =
       '<div class="welcome">' +
         '<div class="welcome-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>' +
-        '<h2>Welcome to StudyBot</h2>' +
-        '<p>' + (d ? d.icon + ' ' + d.name + ' domain selected. Ask any question or try the suggestions below.' : 'Select a domain to get started.') + '</p>' +
+        '<h2>' + greeting + '</h2>' +
+        '<p>' + (d ? d.icon + ' <strong>' + d.name + '</strong> 도메인이 선택되었습니다. 아래 질문을 클릭하거나 직접 입력해보세요!' : '왼쪽에서 도메인을 선택해주세요.') + '</p>' +
         '<div class="welcome-suggestions">' +
           sugs.map(function(s) { return '<button class="welcome-sug" data-q="' + escHtml(s) + '">' + escHtml(s) + '</button>'; }).join('') +
         '</div>' +
-        '<div class="daily-tip"><strong>Daily Tip:</strong> ' + escHtml(tip) + '</div>' +
+        '<div class="daily-tip"><strong>💡 오늘의 학습 팁:</strong> ' + escHtml(tip) + '</div>' +
       '</div>';
   }
 
@@ -1609,7 +1611,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     var sourcesHtml = '';
     if (m.sources && m.sources.length > 0) {
       sourcesHtml = '<div class="msg-sources">' +
-        '<button class="msg-sources-toggle" data-idx="' + idx + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg> ' + m.sources.length + ' source' + (m.sources.length > 1 ? 's' : '') + '</button>' +
+        '<button class="msg-sources-toggle" data-idx="' + idx + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg> ' + m.sources.length + ' 개 출처</button>' +
         '<div class="msg-sources-list" data-idx="' + idx + '">' +
           m.sources.map(function(s) { return '<div class="msg-source-item">' + escHtml(s) + '</div>'; }).join('') +
         '</div></div>';
@@ -1714,7 +1716,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       store.convos[activeId] = {
         id: activeId,
         domain: curDomain,
-        title: 'New Chat',
+        title: '새 대화',
         msgs: [],
         pinned: false,
         created: Date.now(),

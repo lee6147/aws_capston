@@ -2905,7 +2905,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       idleTimer=setTimeout(function(){if(busy)return;var d=domains[curDomain];if(!d)return;var qs=Object.keys(d);var q=qs[Math.floor(Math.random()*qs.length)];
         var btn=document.createElement('button');btn.className='proactive-suggest';btn.textContent='💡 '+q.slice(0,30)+(q.length>30?'...':'')+'?';
         btn.onclick=function(){btn.remove();handle(q)};
-        var ma=$('msgArea');if(ma)ma.appendChild(btn);
+        var ma=$('messages');if(ma)ma.appendChild(btn);
       },30000)}
     document.addEventListener('click',resetIdle);document.addEventListener('keydown',resetIdle);resetIdle();
   }

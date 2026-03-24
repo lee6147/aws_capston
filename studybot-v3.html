@@ -439,6 +439,8 @@ input, textarea { font-family: inherit; color: inherit; }
 .msg-conf.high { background: rgba(34,197,94,.12); color: var(--success); }
 .msg-conf.mid { background: rgba(234,179,8,.12); color: var(--warning); }
 .msg-conf.low { background: rgba(239,68,68,.12); color: var(--error); }
+.msg-conf-bar { width: 60px; height: 3px; background: var(--bg-hover); border-radius: 2px; margin-left: 8px; overflow: hidden; display: inline-block; vertical-align: middle; }
+.msg-conf-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
 .msg-actions {
   display: flex; gap: 4px; margin-left: auto;
 }
@@ -1624,7 +1626,9 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     var confHtml = '';
     if (m.conf) {
       var confCls = m.conf >= 90 ? 'high' : (m.conf >= 70 ? 'mid' : 'low');
-      confHtml = '<span class="msg-conf ' + confCls + '">' + m.conf + '% confidence</span>';
+      var confColor = m.conf >= 90 ? 'var(--success)' : (m.conf >= 70 ? 'var(--warning)' : 'var(--error)');
+      confHtml = '<span class="msg-conf ' + confCls + '">' + m.conf + '% 신뢰도</span>' +
+        '<div class="msg-conf-bar"><div class="msg-conf-fill" style="width:' + m.conf + '%;background:' + confColor + '"></div></div>';
     }
 
     var isBookmarked = store.bookmarks && store.bookmarks.indexOf(idx) !== -1;

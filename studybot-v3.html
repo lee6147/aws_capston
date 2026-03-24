@@ -1285,6 +1285,15 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     var h = d.getHours(), m = d.getMinutes();
     return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
   }
+  function relativeTime(ts) {
+    if (!ts) return '';
+    var diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 10) return '방금';
+    if (diff < 60) return diff + '초 전';
+    if (diff < 3600) return Math.floor(diff/60) + '분 전';
+    if (diff < 86400) return Math.floor(diff/3600) + '시간 전';
+    return Math.floor(diff/86400) + '일 전';
+  }
   function uid() { return '_' + Math.random().toString(36).slice(2, 9); }
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
@@ -1633,7 +1642,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
 
     var isBookmarked = store.bookmarks && store.bookmarks.indexOf(idx) !== -1;
     var metaHtml = '<div class="msg-meta">' +
-      '<span class="msg-time">' + (m.time || '') + '</span>' +
+      '<span class="msg-time">' + (m.ts ? relativeTime(m.ts) : (m.time || '')) + '</span>' +
       confHtml +
       '<div class="msg-actions">' +
         (!isUser ? '<button class="msg-action-btn' + (isBookmarked ? ' bookmarked' : '') + '" data-action="bookmark" data-idx="' + idx + '" title="북마크">\uD83D\uDD16</button>' : '') +
@@ -1748,7 +1757,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
 
   function addUser(text) {
     var convo = ensureConvo();
-    var msg = { role: 'user', text: text, time: timeStr() };
+    var msg = { role: 'user', text: text, time: timeStr(), ts: Date.now() };
     pushMsg(convo, msg);
     renderChat();
     scrollToBottom();
@@ -1759,7 +1768,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   function addBot(text, sources, conf, doStream) {
     var convo = getActive();
     if (!convo) return;
-    var msg = { role: 'bot', text: doStream ? '' : text, sources: sources || [], conf: conf || 0, time: timeStr() };
+    var msg = { role: 'bot', text: doStream ? '' : text, sources: sources || [], conf: conf || 0, time: timeStr(), ts: Date.now() };
     pushMsg(convo, msg);
     if (doStream) {
       showTyping();
@@ -1977,7 +1986,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     if (!convo || !convo.msgs || convo.msgs.length === 0) { showToast('내보낼 대화가 없습니다', 'warning'); return; }
     var text = 'StudyBot Conversation Export\nDomain: ' + (domains[convo.domain] ? domains[convo.domain].name : '') + '\n\n';
     convo.msgs.forEach(function(m) {
-      text += (m.role === 'user' ? 'You' : 'Bot') + ' [' + (m.time || '') + ']: ' + m.text + '\n\n';
+      text += (m.role === 'user' ? '나' : 'StudyBot') + ' [' + (m.time || '') + ']: ' + m.text + '\n\n';
     });
     var blob = new Blob([text], { type: 'text/plain' });
     var a = document.createElement('a');

@@ -960,7 +960,7 @@ function doSlash(t){
   if(t==='/help'){addUser(t);addBot('<strong>📖 StudyBot 명령어</strong><br><br>'+slashCmds.map(function(c){return'<strong>'+c.c+'</strong> — '+c.d}).join('<br>'),null,null,false,100);return true}
   if(t==='/quiz'){handle('퀴즈 만들어줘');return true}
   if(t==='/upload'){addUser(t);showToast('📎 업로드 시뮬레이션 시작','info');return true}
-  if(t==='/clear'){var c=getActive();if(c){c.msgs=[];saveStore();$('msgList').innerHTML='';$('welcome').style.display='';$('msgArea').classList.remove('has-msgs')}showToast('대화 초기화됨','info');return true}
+  if(t==='/clear'){var c=getActive();if(c){c.msgs=[];saveStore();$('msgArea').innerHTML='';$('welcomeScreen').style.display='';$('msgArea').classList.remove('has-msgs')}showToast('대화 초기화됨','info');return true}
   if(t==='/summary'){addUser(t);var d=domains[curDomain];if(d){var ks=Object.keys(d);addBot('📑 <strong>'+domainMeta[curDomain].name+' 핵심 주제</strong><br><br>'+ks.map(function(k,i){return(i+1)+'. '+k}).join('<br>'),null,null,true,85)}return true}
   if(t==='/domain'){addUser(t);addBot('🌍 <strong>도메인 목록</strong><br><br>'+Object.keys(domainMeta).map(function(k){return domainMeta[k].icon+' <strong>'+domainMeta[k].name+'</strong> — '+domainMeta[k].doc}).join('<br>'),null,null,false,100);return true}
   if(t==='/recommend'){handle('추천해줘');return true}

@@ -2964,6 +2964,16 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       }
     });
 
+    /* Double-click bot message to copy */
+    if (msgsEl) msgsEl.addEventListener('dblclick', function(e) {
+      var bubble = e.target.closest('.msg-bubble');
+      if (!bubble) return;
+      var msg = bubble.closest('.msg');
+      if (!msg || msg.classList.contains('user')) return;
+      var text = bubble.textContent || '';
+      navigator.clipboard.writeText(text).then(function() { showToast('📋 메시지 복사됨', 'success'); });
+    });
+
     /* Message action delegation */
     var msgsEl = $('messages');
     if (msgsEl) msgsEl.addEventListener('click', function(e) {

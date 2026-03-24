@@ -113,6 +113,8 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 .scroll-btn{position:sticky;bottom:12px;left:50%;transform:translateX(-50%);padding:6px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--accent);font-size:.75rem;font-family:inherit;cursor:pointer;display:none;box-shadow:0 4px 12px rgba(0,0,0,.3);transition:all .15s;z-index:5}
 .scroll-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 .scroll-btn.show{display:block}
+.summary-btn{position:sticky;bottom:48px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:20px;border:1.5px solid var(--accent2);background:rgba(139,92,246,.1);color:var(--accent2);font-size:.78rem;font-weight:600;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(139,92,246,.2);transition:all .2s;z-index:5;animation:mmPop .4s ease backwards}
+.summary-btn:hover{background:var(--accent2);color:#fff;box-shadow:0 4px 20px rgba(139,92,246,.4)}
 /* Message */
 .msg{display:flex;gap:12px;padding:16px 0;animation:msgSlideIn .4s cubic-bezier(.34,1.56,.64,1) backwards;border-radius:8px;transition:background .15s}
 .msg:hover{background:rgba(59,130,246,.04);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
@@ -401,6 +403,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
   <div class="messages" id="msgsArea" role="log" aria-live="polite">
     <div class="messages-inner" id="msgsInner"></div>
     <button class="scroll-btn" id="scrollBtn" type="button" aria-label="아래로 스크롤">&#8595; 새 메시지</button>
+    <button class="summary-btn" id="summaryBtn" type="button" style="display:none">&#128203; 대화 요약</button>
   </div>
 
   <div class="input-area">
@@ -513,7 +516,7 @@ var recs={
   travel:{t:recHtml('\uC5EC\uD589 \uCD94\uCC9C \uD559\uC2B5 \uC790\uB8CC',[['\uC77C\uBCF8 \uC5EC\uD589 \uD544\uC218 \uC900\uBE44\uBB3C','\uCD9C\uAD6D \uC804 \uCCB4\uD06C\uB9AC\uC2A4\uD2B8'],['\uB3C4\uCFC4 3\uC77C \uCF54\uC2A4 \uCD94\uCC9C','\uC644\uBCBD \uC5EC\uD589 \uB3D9\uC120'],['\uC5EC\uD589 \uC608\uC0B0 \uACC4\uD68D','\uC808\uC57D \uD301 \uB300\uBC29\uCD9C']],[['\uBE60\uB2C8\uBCF8\uC5EC\uD589','\uD55C\uAD6D\uC778 \uC77C\uBCF8\uC5EC\uD589 \uCC44\uB110'],['Abroad in Japan','\uC601\uC5B4\uB85C \uBC30\uC6B0\uB294 \uC77C\uBCF8']],['\uC5EC\uD589\uC758 \uC774\uC720 (\uC54C\uB7AD \uB4DC \uBCF4\uD1B5) \u2014 \uC5EC\uD589 \uCCA0\uD559','\uC5D0\uC5B4\uBE44\uC564\uBE44 \uCC3D\uC5C5\uC790 \uC774\uC57C\uAE30 \u2014 \uC5EC\uD589\uACFC \uBE44\uC988\uB2C8\uC2A4']),s:[{p:'\uCC38\uACE0',x:'\uC5EC\uD589 \uAC00\uC774\uB4DC\uBD81 \uBCF4\uCDA9 \uC790\uB8CC'}],c:['\uC77C\uBCF8 \uC5EC\uD589 \uD544\uC218 \uC900\uBE44\uBB3C\uC740?','\uB3C4\uCFC4 3\uC77C \uCF54\uC2A4 \uCD94\uCC9C\uD574\uC918'],conf:85}
 };
 var typHints=['Bedrock KB 문서 검색 중...','S3 Vectors 유사도 분석 중...','Claude 3 Haiku 답변 생성 중...','출처 검증 중...'];
-var slashCmds=[{c:'/help',i:'\u2753',d:'명령어 안내'},{c:'/quiz',i:'\uD83D\uDCDD',d:'퀴즈 생성'},{c:'/upload',i:'\uD83D\uDCCE',d:'PDF 업로드'},{c:'/summary',i:'\uD83D\uDCD1',d:'문서 요약'},{c:'/clear',i:'\uD83D\uDDD1',d:'대화 초기화'},{c:'/domain',i:'\uD83C\uDF0D',d:'주제 변경'},{c:'/recommend',i:'\uD83C\uDFA5',d:'영상/자료 추천'},{c:'/mindmap',i:'\uD83E\uDDE0',d:'마인드맵 보기'},{c:'/export-md',i:'\uD83D\uDCDD',d:'마크다운 내보내기'},{c:'/stats',i:'\uD83D\uDCCA',d:'도메인 통계 대시보드'},{c:'/share',i:'\uD83D\uDD17',d:'대화 HTML 공유'},{c:'/achievements',i:'\uD83C\uDFC6',d:'업적 배지 보기'},{c:'/heatmap',i:'\uD83D\uDFE9',d:'학습 활동 히트맵'}];
+var slashCmds=[{c:'/help',i:'\u2753',d:'명령어 안내'},{c:'/quiz',i:'\uD83D\uDCDD',d:'퀴즈 생성'},{c:'/upload',i:'\uD83D\uDCCE',d:'PDF 업로드'},{c:'/summary',i:'\uD83D\uDCD1',d:'문서 요약'},{c:'/clear',i:'\uD83D\uDDD1',d:'대화 초기화'},{c:'/domain',i:'\uD83C\uDF0D',d:'주제 변경'},{c:'/recommend',i:'\uD83C\uDFA5',d:'영상/자료 추천'},{c:'/mindmap',i:'\uD83E\uDDE0',d:'마인드맵 보기'},{c:'/export-md',i:'\uD83D\uDCDD',d:'마크다운 내보내기'},{c:'/stats',i:'\uD83D\uDCCA',d:'도메인 통계 대시보드'},{c:'/share',i:'\uD83D\uDD17',d:'대화 HTML 공유'},{c:'/achievements',i:'\uD83C\uDFC6',d:'업적 배지 보기'},{c:'/heatmap',i:'\uD83D\uDFE9',d:'학습 활동 히트맵'},{c:'/summary-chat',i:'\uD83D\uDCCB',d:'대화 요약'}];
 
 // ══════ UTILS ══════
 function ts(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
@@ -533,7 +536,7 @@ function getActive(){return convos.find(function(c){return c.id===activeId})||co
 function newConvo(silent){var c={id:genId(),title:'새 대화',msgs:[],ts:Date.now(),domain:curDomain};convos.unshift(c);if(convos.length>20)convos.pop();activeId=c.id;if(!silent){saveStore();renderConvos();resetView()}}
 function switchConvo(id){if(id===activeId)return;cancelStream();activeId=id;var c=getActive();if(c)curDomain=c.domain||'bio';saveStore();renderConvos();renderDocs();loadMsgs();renderDomainBar()}
 function deleteConvo(id){convos=convos.filter(function(c){return c.id!==id});if(id===activeId){if(convos.length)activeId=convos[0].id;else newConvo(true)}saveStore();renderConvos();loadMsgs()}
-function pushMsg(r,t){var c=getActive();if(!c)return;c.msgs.push({r:r,t:t,ts:ts()});if(c.msgs.length===1&&r==='u'){c.title=t.slice(0,28)+(t.length>28?'...':'');c.domain=curDomain}c.ts=Date.now();saveStore();renderConvos();var wc=$('wordCount');if(wc){var w=c.msgs.reduce(function(a,m){return a+m.t.replace(/<[^>]+>/g,'').split(/\s+/).length},0);wc.textContent=w+' 단어'}}
+function pushMsg(r,t){var c=getActive();if(!c)return;c.msgs.push({r:r,t:t,ts:ts()});if(c.msgs.length===1&&r==='u'){c.title=t.slice(0,28)+(t.length>28?'...':'');c.domain=curDomain}c.ts=Date.now();saveStore();renderConvos();var wc=$('wordCount');if(wc){var w=c.msgs.reduce(function(a,m){return a+m.t.replace(/<[^>]+>/g,'').split(/\s+/).length},0);wc.textContent=w+' 단어'}updateSummaryBtn()}
 
 // ══════ RENDER ══════
 function renderConvos(){
@@ -684,6 +687,7 @@ function doSlash(t){
     addBot('\uD83C\uDFC6 <strong>업적 배지</strong> ('+unlocked+'/'+achvDefs.length+')<br>'+grid,[],[],false,100);
     return true
   }
+  if(t==='/summary-chat'){generateSummary();return true}
   if(t==='/heatmap'){
     addUser('/heatmap');
     var now=Date.now(),dayMs=86400000,dayCounts={},streak=0,activeDays=0;
@@ -713,6 +717,22 @@ function doSlash(t){
   return false
 }
 
+// ══════ SMART SUMMARY ══════
+function generateSummary(){
+  var c=getActive();if(!c||c.msgs.length<3)return showToast('요약하기에 대화가 부족합니다','warn');
+  addUser('/summary-chat');busy=true;showTyp();
+  var botMsgs=c.msgs.filter(function(m){return m.r==='b'});
+  var bullets=botMsgs.map(function(m){
+    var plain=m.t.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+    var first=plain.split(/[.!?\n]/)[0];
+    return first.length>80?first.slice(0,78)+'..':first
+  }).filter(function(b){return b.length>5});
+  var summary='\uD83D\uDCCB <strong>\uB300\uD654 \uC694\uC57D</strong> ('+c.msgs.length+'\uAC1C \uBA54\uC2DC\uC9C0)<br><br>'+
+    bullets.map(function(b,i){return '\u2022 '+escHtml(b)}).join('<br>')+'<br><br>'+
+    '<em style="color:var(--text2);font-size:.75rem">\uCD1D '+c.msgs.filter(function(m){return m.r==='u'}).length+'\uAC1C \uC9C8\uBB38, '+botMsgs.length+'\uAC1C \uB2F5\uBCC0</em>';
+  setTimeout(function(){hideTyp();addBot(summary,[],[],true,100)},800)
+}
+function updateSummaryBtn(){var sb=$('summaryBtn');if(!sb)return;var c=getActive();sb.style.display=(c&&c.msgs.length>=5)?'block':'none'}
 // ══════ UPLOAD ══════
 function doUpload(){
   var ov=document.createElement('div');ov.className='upload-overlay';ov.id='upOverlay';
@@ -883,6 +903,7 @@ $('focusBtn').addEventListener('click',function(){document.querySelector('.app')
 (function(){var tb=$('tutorialBtn');if(!tb)return;tb.addEventListener('click',function(){var steps=[{msg:'\uD83D\uDC49 Step 1: 왼쪽에서 도메인(주제)을 선택하세요',delay:0},{msg:'\uD83D\uDC49 Step 2: 아래 입력창에 질문을 입력하세요',delay:1500},{msg:'\uD83D\uDC49 Step 3: /mindmap 또는 /recommend 를 사용해보세요!',delay:3000}];steps.forEach(function(s){setTimeout(function(){showToast(s.msg,'info')},s.delay)})})})();
 var sBtn=$('scrollBtn'),mArea=$('msgsArea');
 if(mArea&&sBtn){mArea.addEventListener('scroll',function(){var atBottom=mArea.scrollHeight-mArea.scrollTop-mArea.clientHeight<80;sBtn.classList.toggle('show',!atBottom)});sBtn.addEventListener('click',function(){mArea.scrollTop=mArea.scrollHeight;sBtn.classList.remove('show')})}
+var smBtn=$('summaryBtn');if(smBtn)smBtn.addEventListener('click',generateSummary);
 // ══════ SIDEBAR RESIZE ══════
 (function(){var handle=$('panelResize'),panel=$('panelRight'),dragging=false,startX,startW;
 handle.addEventListener('mousedown',function(e){e.preventDefault();dragging=true;startX=e.clientX;startW=panel.offsetWidth;handle.classList.add('active');document.body.style.cursor='col-resize';document.body.style.userSelect='none'});

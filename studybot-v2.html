@@ -444,6 +444,10 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
       <div class="bm-empty" id="bmEmpty" style="padding:10px;font-size:.72rem">&#128278; 메시지의 &#128278; 버튼을 눌러 저장</div>
       <div id="bmList"></div>
     </div>
+    <div class="mm-bm-section">
+      <div class="mm-section-label">&#128221; 메모장</div>
+      <textarea id="quickNote" class="mm-textarea" rows="3" placeholder="학습 메모를 자유롭게 작성하세요..." style="font-size:.75rem"></textarea>
+    </div>
   </div>
 </aside>
 </div>
@@ -904,6 +908,8 @@ $('focusBtn').addEventListener('click',function(){document.querySelector('.app')
 var sBtn=$('scrollBtn'),mArea=$('msgsArea');
 if(mArea&&sBtn){mArea.addEventListener('scroll',function(){var atBottom=mArea.scrollHeight-mArea.scrollTop-mArea.clientHeight<80;sBtn.classList.toggle('show',!atBottom)});sBtn.addEventListener('click',function(){mArea.scrollTop=mArea.scrollHeight;sBtn.classList.remove('show')})}
 var smBtn=$('summaryBtn');if(smBtn)smBtn.addEventListener('click',generateSummary);
+// Quick Notes auto-save
+var qn=$('quickNote');if(qn){qn.value=localStorage.getItem('studybot_note')||'';qn.addEventListener('input',function(){localStorage.setItem('studybot_note',qn.value)})}
 // ══════ SIDEBAR RESIZE ══════
 (function(){var handle=$('panelResize'),panel=$('panelRight'),dragging=false,startX,startW;
 handle.addEventListener('mousedown',function(e){e.preventDefault();dragging=true;startX=e.clientX;startW=panel.offsetWidth;handle.classList.add('active');document.body.style.cursor='col-resize';document.body.style.userSelect='none'});

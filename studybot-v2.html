@@ -327,6 +327,11 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 *{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.app.focus-mode .panel-left,.app.focus-mode .panel-right{display:none!important}
+.app.focus-mode .panel-center{max-width:100%}
+.app.focus-mode .messages-inner{max-width:860px}
+.app.focus-mode .topbar-badge,.app.focus-mode .confidence-bar{opacity:.3}
+.app.focus-mode #focusBtn{color:var(--accent);border-color:var(--accent)}
 @media print{.panel-left,.panel-right,.input-area,.topbar,.confidence-bar,.overlay,.toast-container,.search-overlay,.msg-acts,.chips,.suggest-bar{display:none!important}.app{display:block}.panel-center{width:100%}.messages{display:flex!important;overflow:visible!important}.messages-inner{max-width:100%}.msg{break-inside:avoid;page-break-inside:avoid;border-top:1px solid #ccc!important}.msg-text{font-size:11pt}.welcome{display:none}body{background:#fff;color:#000}}
 </style>
 </head>
@@ -366,6 +371,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
       <button class="tb-btn" id="themeBtn" aria-label="테마 전환">&#127769;</button>
       <button class="tb-btn" id="exportBtn" aria-label="내보내기">&#128203;</button>
       <button class="tb-btn" id="clearBtn" aria-label="초기화">&#128465;</button>
+      <button class="tb-btn" id="focusBtn" aria-label="집중 모드" title="집중 모드 (Alt+Z)">&#127919;</button>
       <button class="tb-btn" id="mmToggle" aria-label="마인드맵" style="display:none">&#129504;</button>
     </div>
   </div>
@@ -856,6 +862,7 @@ $('uploadBtn').addEventListener('click',function(){if(!busy){busy=true;doUpload(
 $('menuBtn').addEventListener('click',function(){$('panelLeft').classList.toggle('open');$('overlay').classList.toggle('show')});
 $('overlay').addEventListener('click',function(){$('panelLeft').classList.remove('open');$('panelRight').classList.remove('open');$('overlay').classList.remove('show')});
 $('mmToggle').addEventListener('click',function(){$('panelRight').classList.toggle('open');$('overlay').classList.toggle('show');renderMindmap()});
+$('focusBtn').addEventListener('click',function(){document.querySelector('.app').classList.toggle('focus-mode');var on=document.querySelector('.app').classList.contains('focus-mode');showToast(on?'\uD83C\uDFAF 집중 모드 ON — Alt+Z로 해제':'\uD83C\uDFAF 집중 모드 OFF','info')});
 // Tutorial button
 (function(){var tb=$('tutorialBtn');if(!tb)return;tb.addEventListener('click',function(){var steps=[{msg:'\uD83D\uDC49 Step 1: 왼쪽에서 도메인(주제)을 선택하세요',delay:0},{msg:'\uD83D\uDC49 Step 2: 아래 입력창에 질문을 입력하세요',delay:1500},{msg:'\uD83D\uDC49 Step 3: /mindmap 또는 /recommend 를 사용해보세요!',delay:3000}];steps.forEach(function(s){setTimeout(function(){showToast(s.msg,'info')},s.delay)})})})();
 var sBtn=$('scrollBtn'),mArea=$('msgsArea');
@@ -907,7 +914,7 @@ rec.onerror=function(e){recording=false;vb.classList.remove('recording');vb.text
   }
   function goToMsg(idx){var msgs=$('msgsInner');if(!msgs)return;var nodes=msgs.querySelectorAll('.msg');if(nodes[idx]){nodes[idx].scrollIntoView({behavior:'smooth',block:'center'});nodes[idx].style.outline='2px solid var(--accent)';setTimeout(function(){nodes[idx].style.outline=''},2000)}}
   function navResults(dir){var items=res.querySelectorAll('.search-result');if(!items.length)return;items.forEach(function(el){el.classList.remove('active')});activeIdx=Math.max(0,Math.min(activeIdx+dir,items.length-1));items[activeIdx].classList.add('active');items[activeIdx].scrollIntoView({block:'nearest'})}
-  document.addEventListener('keydown',function(e){if(e.altKey&&e.key>='1'&&e.key<='6'){e.preventDefault();var dk=Object.keys(domains);var di=parseInt(e.key)-1;if(dk[di]){switchDomain(dk[di]);showToast(domains[dk[di]].icon+' '+domains[dk[di]].name,'info')}return}if((e.ctrlKey||e.metaKey)&&e.key==='/'){e.preventDefault();showToast('Ctrl+K 검색 · Ctrl+/ 단축키 · Alt+1~6 도메인 전환 · / 명령어','info');return}if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();ov.classList.contains('show')?closeSearch():openSearch()}if(!ov.classList.contains('show'))return;if(e.key==='Escape')closeSearch();if(e.key==='ArrowDown'){e.preventDefault();navResults(1)}if(e.key==='ArrowUp'){e.preventDefault();navResults(-1)}if(e.key==='Enter'){e.preventDefault();var act=res.querySelector('.search-result.active');if(act){goToMsg(parseInt(act.dataset.idx));closeSearch()}}});
+  document.addEventListener('keydown',function(e){if(e.altKey&&e.key==='z'){e.preventDefault();$('focusBtn').click();return}if(e.altKey&&e.key>='1'&&e.key<='6'){e.preventDefault();var dk=Object.keys(domains);var di=parseInt(e.key)-1;if(dk[di]){switchDomain(dk[di]);showToast(domains[dk[di]].icon+' '+domains[dk[di]].name,'info')}return}if((e.ctrlKey||e.metaKey)&&e.key==='/'){e.preventDefault();showToast('Ctrl+K 검색 · Alt+1~6 도메인 · Alt+Z 집중모드 · / 명령어','info');return}if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();ov.classList.contains('show')?closeSearch():openSearch()}if(!ov.classList.contains('show'))return;if(e.key==='Escape')closeSearch();if(e.key==='ArrowDown'){e.preventDefault();navResults(1)}if(e.key==='ArrowUp'){e.preventDefault();navResults(-1)}if(e.key==='Enter'){e.preventDefault();var act=res.querySelector('.search-result.active');if(act){goToMsg(parseInt(act.dataset.idx));closeSearch()}}});
   inp.addEventListener('input',doSearch);
   ov.addEventListener('click',function(e){if(e.target===ov)closeSearch()});
 })();

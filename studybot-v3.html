@@ -278,6 +278,10 @@ body{font-family:var(--font-family);font-size:var(--text-base);line-height:var(-
   .msg{break-inside:avoid;border-bottom:1px solid #ccc;padding:8px 0}
   body{background:#fff;color:#000}.msg-body{color:#222}
 }
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.app{animation:fadeIn .5s var(--ease-out) backwards}
+.panel-resize{position:absolute;left:-3px;top:0;bottom:0;width:6px;cursor:col-resize;z-index:6}
+.panel-resize:hover,.panel-resize.active{background:var(--accent);opacity:.4;border-radius:3px}
 </style>
 </head>
 <body>
@@ -1222,6 +1226,14 @@ function checkAchievements(){
   ];
   checks.forEach(function(ch){if(ch.ok&&!achvState[ch.id]){achvState[ch.id]=true;localStorage.setItem('sb3_achv',JSON.stringify(achvState));var def=achvDefs.find(function(a){return a.id===ch.id});if(def){showConfetti();showToast('🏆 업적 달성: '+def.icon+' '+def.name,'success')}}})
 }
+
+// Sidebar Resize
+(function(){var h=$('resizeHandle'),p=$('panelRight');if(!h||!p)return;var dragging=false,sx,sw;
+h.addEventListener('mousedown',function(e){e.preventDefault();dragging=true;sx=e.clientX;sw=p.offsetWidth;h.classList.add('active');document.body.style.cursor='col-resize';document.body.style.userSelect='none'});
+document.addEventListener('mousemove',function(e){if(!dragging)return;var w=sw-(e.clientX-sx);p.style.width=Math.max(220,Math.min(w,window.innerWidth*.5))+'px'});
+document.addEventListener('mouseup',function(){if(!dragging)return;dragging=false;h.classList.remove('active');document.body.style.cursor='';document.body.style.userSelect=''});
+h.addEventListener('dblclick',function(){p.style.width=''})
+})();
 
 /* ═══════════════════════════════════════════
    KEYBOARD SHORTCUTS

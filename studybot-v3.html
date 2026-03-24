@@ -1057,7 +1057,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     </div>
     <div class="search-results" id="searchResults"></div>
     <div class="search-hint">
-      <span><kbd>Esc</kbd> close</span>
+      <span><kbd>Esc</kbd> 닫기</span>
       <span><kbd>Enter</kbd> jump</span>
     </div>
   </div>
@@ -1076,7 +1076,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   <div class="mindmap-header">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-7.07-15.07l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
     <span class="mindmap-title">Mind Map</span>
-    <button class="mindmap-close" id="mindmapClose" title="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <button class="mindmap-close" id="mindmapClose" title="닫기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
   </div>
   <div class="mindmap-toolbar">
     <button class="mm-tool-btn" id="mmZoomIn">+ Zoom</button>
@@ -1106,7 +1106,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       <span class="notes-header-title">Quick Notes</span>
       <button class="mindmap-close" id="notesClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
-    <textarea id="notesArea" placeholder="Type your study notes here..."></textarea>
+    <textarea id="notesArea" placeholder="학습 메모를 자유롭게 작성하세요..."></textarea>
     <div class="notes-footer">
       <span id="notesCharCount">0 characters</span>
       <span>Auto-saved</span>
@@ -1129,7 +1129,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
 <div class="shortcuts-overlay" id="shortcutsOverlay">
   <div class="shortcuts-card">
     <div class="shortcuts-title">
-      <span>Keyboard Shortcuts</span>
+      <span>키보드 단축키</span>
       <button class="mindmap-close" id="shortcutsClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="shortcut-row"><span class="shortcut-label">Search</span><div class="shortcut-keys"><span class="shortcut-key">Ctrl</span><span class="shortcut-key">K</span></div></div>
@@ -1184,16 +1184,16 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     </div>
 
     <div class="sidebar-footer">
-      <button class="sidebar-footer-btn" id="themeToggle" title="Toggle theme">
+      <button class="sidebar-footer-btn" id="themeToggle" title="테마 전환">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
       </button>
-      <button class="sidebar-footer-btn" id="shortcutsBtn" title="Shortcuts (Ctrl+/)">
+      <button class="sidebar-footer-btn" id="shortcutsBtn" title="단축키 (Ctrl+/)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>
       </button>
-      <button class="sidebar-footer-btn" id="notesBtn" title="Quick Notes (Ctrl+.)">
+      <button class="sidebar-footer-btn" id="notesBtn" title="빠른 메모 (Ctrl+.)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       </button>
-      <button class="sidebar-footer-btn" id="bookmarksBtn" title="Bookmarks">
+      <button class="sidebar-footer-btn" id="bookmarksBtn" title="북마크 목록">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
       </button>
     </div>
@@ -1212,16 +1212,16 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       <div class="topbar-spacer"></div>
       <button class="topbar-search-btn" id="topbarSearch">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <span>Search</span>
+        <span>검색</span>
         <kbd>Ctrl K</kbd>
       </button>
-      <button class="topbar-btn" id="mindmapBtn" title="Mind Map">
+      <button class="topbar-btn" id="mindmapBtn" title="마인드맵">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-7.07-15.07l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
       </button>
-      <button class="topbar-btn" id="ttsToggle" title="Read aloud">
+      <button class="topbar-btn" id="ttsToggle" title="읽어주기">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
       </button>
-      <button class="topbar-btn" id="focusBtn" title="Focus mode (Alt+Z)">
+      <button class="topbar-btn" id="focusBtn" title="집중 모드 (Alt+Z)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
       </button>
     </div>
@@ -1246,14 +1246,14 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       <div class="input-row">
         <div class="input-wrap" id="inputWrap">
           <div class="slash-menu" id="slashMenu"></div>
-          <textarea id="chatInput" rows="1" placeholder="질문을 입력하세요... ( / 명령어)" aria-label="Chat input"></textarea>
+          <textarea id="chatInput" rows="1" placeholder="질문을 입력하세요... ( / 명령어)" aria-label="채팅 입력"></textarea>
           <div class="input-btns">
-            <button class="input-icon-btn" id="voiceBtn" title="Voice input">
+            <button class="input-icon-btn" id="voiceBtn" title="음성 입력">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
             </button>
           </div>
         </div>
-        <button class="send-btn" id="sendBtn" disabled title="Send (Enter)">
+        <button class="send-btn" id="sendBtn" disabled title="전송 (Enter)">
           <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
         </button>
       </div>
@@ -1532,14 +1532,14 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       html += '<div class="convo-group-label">' + label + '</div>';
       list.forEach(function(id) {
         var c = store.convos[id];
-        var pinHtml = c.pinned ? '<span class="convo-pin" title="Pinned">\uD83D\uDCCC</span>' : '';
+        var pinHtml = c.pinned ? '<span class="convo-pin" title="고정됨">\uD83D\uDCCC</span>' : '';
         html += '<div class="convo-item' + (id === activeId ? ' active' : '') + '" data-id="' + id + '">' +
           '<span class="convo-icon">' + (domains[c.domain] ? domains[c.domain].icon : '\uD83D\uDCAC') + '</span>' +
           '<span class="convo-title">' + escHtml(c.title || '새 대화') + '</span>' +
           pinHtml +
           '<div class="convo-actions">' +
             '<button class="convo-action-btn" data-action="pin" data-id="' + id + '" title="' + (c.pinned ? 'Unpin' : 'Pin') + '">\uD83D\uDCCC</button>' +
-            '<button class="convo-action-btn" data-action="delete" data-id="' + id + '" title="Delete">\u2715</button>' +
+            '<button class="convo-action-btn" data-action="delete" data-id="' + id + '" title="삭제">\u2715</button>' +
           '</div></div>';
       });
     }
@@ -1628,9 +1628,9 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       '<span class="msg-time">' + (m.time || '') + '</span>' +
       confHtml +
       '<div class="msg-actions">' +
-        (!isUser ? '<button class="msg-action-btn' + (isBookmarked ? ' bookmarked' : '') + '" data-action="bookmark" data-idx="' + idx + '" title="Bookmark">\uD83D\uDD16</button>' : '') +
-        (!isUser ? '<button class="msg-action-btn" data-action="copy" data-idx="' + idx + '" title="Copy">\uD83D\uDCCB</button>' : '') +
-        (!isUser ? '<button class="msg-action-btn" data-action="read" data-idx="' + idx + '" title="Read aloud">\uD83D\uDD0A</button>' : '') +
+        (!isUser ? '<button class="msg-action-btn' + (isBookmarked ? ' bookmarked' : '') + '" data-action="bookmark" data-idx="' + idx + '" title="북마크">\uD83D\uDD16</button>' : '') +
+        (!isUser ? '<button class="msg-action-btn" data-action="copy" data-idx="' + idx + '" title="복사">\uD83D\uDCCB</button>' : '') +
+        (!isUser ? '<button class="msg-action-btn" data-action="read" data-idx="' + idx + '" title="읽어주기">\uD83D\uDD0A</button>' : '') +
       '</div></div>';
 
     return '<div class="' + cls + '">' +

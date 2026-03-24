@@ -123,8 +123,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 .msg-text code{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:1px 4px;font-size:.82rem}
 .msg-text a{color:var(--cyan);text-decoration:none;border-bottom:1px solid rgba(6,182,212,0.3);transition:all .15s}
 .msg-text a:hover{color:#22d3ee;border-bottom-color:var(--cyan)}
-
-/* ── DIFFERENTIATOR: Source Citations ── */
+/* Sources */
 .msg-sources{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .msg-src{background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);border-radius:6px;padding:3px 8px;font-size:.7rem;color:var(--cyan);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:3px;max-width:180px}
 .msg-src:hover{background:rgba(6,182,212,0.2);border-color:var(--cyan)}
@@ -132,18 +131,15 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 .msg-src-page{font-weight:700;flex-shrink:0}
 .msg-src-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .msg-src.expanded .msg-src-text{white-space:normal;overflow:visible}
-
-/* ── DIFFERENTIATOR: Confidence indicator on messages ── */
+/* Confidence */
 .msg-confidence{display:inline-flex;align-items:center;gap:4px;font-size:.65rem;color:var(--text2);margin-left:8px}
 .conf-dot{width:6px;height:6px;border-radius:50%}
 .conf-high{background:var(--green)}
 .conf-med{background:var(--orange)}
 .conf-low{background:var(--red)}
-
-/* ── DIFFERENTIATOR: Hallucination Guard ── */
+/* Guard */
 .msg-guard{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius);padding:10px 14px;margin-top:6px;font-size:.78rem;color:var(--red);display:flex;align-items:flex-start;gap:8px}
 .msg-guard-icon{font-size:1.1rem;flex-shrink:0}
-
 /* Actions */
 .msg-acts{display:flex;gap:3px;margin-top:6px;opacity:0;transition:opacity .15s}
 .msg:hover .msg-acts,.msg:focus-within .msg-acts{opacity:1}
@@ -151,7 +147,6 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 .msg-act:hover{border-color:var(--accent);color:var(--accent)}
 .msg-act.liked{color:var(--green);border-color:var(--green)}
 .msg-act.disliked{color:var(--red);border-color:var(--red)}
-
 /* Chips */
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .chip{padding:6px 14px;border-radius:18px;border:1.5px solid var(--border);background:none;color:var(--text);font-size:.78rem;cursor:pointer;transition:all .15s;font-family:inherit}
@@ -171,7 +166,6 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 .typing-skeleton span:nth-child(3){width:55%;animation-delay:.3s}
 @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
 .typing-label{font-size:.72rem;color:var(--text2);font-style:italic}
-
 /* Input */
 .input-area{border-top:1px solid var(--border);padding:12px 16px;flex-shrink:0;background:var(--surface)}
 .input-wrap{max-width:720px;margin:0 auto;position:relative}
@@ -192,14 +186,12 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 .suggest-chip{padding:4px 12px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text2);font-size:.72rem;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
 .suggest-chip:hover{border-color:var(--accent);color:var(--accent);background:rgba(59,130,246,.08)}
 .input-hint kbd{padding:1px 4px;border-radius:3px;border:1px solid var(--border);background:var(--card);font-family:inherit;font-size:.62rem}
-
-/* Command popup */
+/* Popup */
 .cmd-popup{position:absolute;bottom:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 -4px 16px rgba(0,0,0,.3);margin-bottom:6px;overflow:hidden;display:none;z-index:10}
 .cmd-popup.show{display:block}
 .cmd-item{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;transition:background .1s;font-size:.82rem}
 .cmd-item:hover,.cmd-item.active{background:rgba(59,130,246,0.1)}
-
-/* ── RIGHT: Tools Panel ── */
+/* ══════ RIGHT ══════ */
 .panel-right{width:300px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:transform .3s;position:relative;min-width:220px;max-width:50vw}
 .panel-resize{position:absolute;left:-3px;top:0;bottom:0;width:6px;cursor:col-resize;z-index:6;background:transparent;transition:background .15s}
 .panel-resize:hover,.panel-resize.active{background:var(--accent);opacity:.5;border-radius:3px}
@@ -704,10 +696,17 @@ $('mmAnalyze').addEventListener('click',function(){
   if(result){customMm=result;renderMindmap()}
   else{$('mmInput').style.borderColor='var(--red)';setTimeout(function(){$('mmInput').style.borderColor=''},1500)}
 });
-$('mmReset').addEventListener('click',function(){customMm=null;$('mmInput').value='';mmZoom=100;renderMindmap()});
+$('mmReset').addEventListener('click',function(){customMm=null;$('mmInput').value='';mmZoom=100;mmPanX=0;mmPanY=0;applyMmTransform();renderMindmap()});
 var mmZoom=100;
-$('mmZoomIn').addEventListener('click',function(){mmZoom=Math.min(mmZoom+20,200);$('mmSvg').style.transform='scale('+mmZoom/100+')';$('mmSvg').style.transformOrigin='top left';$('mmZoomLvl').textContent=mmZoom+'%'});
-$('mmZoomOut').addEventListener('click',function(){mmZoom=Math.max(mmZoom-20,60);$('mmSvg').style.transform='scale('+mmZoom/100+')';$('mmSvg').style.transformOrigin='top left';$('mmZoomLvl').textContent=mmZoom+'%'});
+$('mmZoomIn').addEventListener('click',function(){mmZoom=Math.min(mmZoom+20,200);applyMmTransform()});
+$('mmZoomOut').addEventListener('click',function(){mmZoom=Math.max(mmZoom-20,60);applyMmTransform()});
+var mmPanX=0,mmPanY=0,mmDragging=false,mmDragX=0,mmDragY=0;
+function applyMmTransform(){var s=$('mmSvg');if(s){s.style.transform='scale('+mmZoom/100+') translate('+mmPanX+'px,'+mmPanY+'px)';s.style.transformOrigin='top left';$('mmZoomLvl').textContent=mmZoom+'%'}}
+(function(){var s=$('mmSvg');if(!s)return;s.style.cursor='grab';
+s.addEventListener('mousedown',function(e){if(e.target.closest('.mm-node'))return;mmDragging=true;mmDragX=e.clientX-mmPanX;mmDragY=e.clientY-mmPanY;s.style.cursor='grabbing'});
+document.addEventListener('mousemove',function(e){if(!mmDragging)return;mmPanX=e.clientX-mmDragX;mmPanY=e.clientY-mmDragY;applyMmTransform()});
+document.addEventListener('mouseup',function(){if(mmDragging){mmDragging=false;var s=$('mmSvg');if(s)s.style.cursor='grab'}})
+})();
 
 // ══════ INIT ══════
 loadStore();setTheme(theme);renderConvos();renderDomainBar();renderDocs();renderWelcome();renderMindmap();renderSuggestions();

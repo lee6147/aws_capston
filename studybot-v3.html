@@ -183,6 +183,8 @@ input, textarea { font-family: inherit; color: inherit; }
 .domain-chip .chip-icon { font-size: 13px; }
 
 /* Conversation list */
+.convo-section-header { display: flex; justify-content: space-between; align-items: center; padding: 4px 16px; font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+.convo-count { background: var(--bg-elevated); padding: 1px 8px; border-radius: 10px; font-size: 10px; }
 .convo-section { flex: 1; overflow-y: auto; padding: 8px 12px; }
 .convo-group-label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); padding: 12px 8px 6px; text-transform: uppercase; letter-spacing: .04em; }
 .convo-item {
@@ -1195,9 +1197,13 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
 
     <button class="new-convo-btn" id="newConvoBtn">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-      New Conversation
+      새 대화
     </button>
 
+    <div class="convo-section-header">
+      <span>대화 목록</span>
+      <span class="convo-count" id="convoCount">0</span>
+    </div>
     <div class="convo-section" id="convoList"></div>
 
     <div class="streak-section" id="streakSection">
@@ -1591,6 +1597,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     addGroup('이번 주', groups.week);
     addGroup('이전', groups.older);
     el.innerHTML = html;
+    var cc=$('convoCount');if(cc)cc.textContent=ids.length;
   }
 
   /* ══════════════════════════════════════════

@@ -506,6 +506,12 @@ input, textarea { font-family: inherit; color: inherit; }
 }
 .typing-dot:nth-child(2) { animation-delay: .2s; }
 .typing-dot:nth-child(3) { animation-delay: .4s; }
+.thinking-steps { margin-top: 8px; font-size: 12px; color: var(--text-tertiary); line-height: 1.6; }
+.thinking-step { opacity: 0; animation: fadeStep .3s ease forwards; }
+.thinking-step::before { content: '→ '; color: var(--accent); }
+@keyframes fadeStep { to { opacity: 1; } }
+.proactive-suggest { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); padding: 10px 20px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 20px; font-size: 13px; color: var(--text-secondary); cursor: pointer; box-shadow: var(--shadow-md); transition: all .2s; z-index: 5; animation: fadeIn .4s ease; }
+.proactive-suggest:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Suggest bar */
 .suggest-bar {
@@ -1745,14 +1751,19 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     }
   }
 
+  var thinkingSteps=['문서 검색 중...','관련 섹션 분석 중...','답변 생성 중...','출처 검증 중...'];
   function showTyping() {
     var el = $('typingIndicator');
-    if (el) el.classList.add('show');
+    if (!el) return; el.classList.add('show');
+    var dots=el.querySelector('.typing-dots');
+    if(dots){var sd=dots.querySelector('.thinking-steps');if(!sd){sd=document.createElement('div');sd.className='thinking-steps';dots.appendChild(sd)}sd.innerHTML='';
+    var si=0;var iv=setInterval(function(){if(si>=thinkingSteps.length||!el.classList.contains('show')){clearInterval(iv);return}var s=document.createElement('div');s.className='thinking-step';s.style.animationDelay=(si*0.15)+'s';s.textContent=thinkingSteps[si];sd.appendChild(s);si++},400)}
     scrollToBottom();
   }
   function hideTyping() {
     var el = $('typingIndicator');
-    if (el) el.classList.remove('show');
+    if (!el) return; el.classList.remove('show');
+    var sd=el.querySelector('.thinking-steps');if(sd)sd.innerHTML='';
   }
 
   /* Streaming typewriter */
@@ -2887,6 +2898,16 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       var ci = $('chatInput');
       if (ci) ci.focus();
     }
+
+    /* Proactive suggestion after 30s idle */
+    var idleTimer=null;
+    function resetIdle(){clearTimeout(idleTimer);var old=document.querySelector('.proactive-suggest');if(old)old.remove();
+      idleTimer=setTimeout(function(){if(busy)return;var d=domains[curDomain];if(!d)return;var qs=Object.keys(d);var q=qs[Math.floor(Math.random()*qs.length)];
+        var btn=document.createElement('button');btn.className='proactive-suggest';btn.textContent='💡 '+q.slice(0,30)+(q.length>30?'...':'')+'?';
+        btn.onclick=function(){btn.remove();handle(q)};
+        var ma=$('msgArea');if(ma)ma.appendChild(btn);
+      },30000)}
+    document.addEventListener('click',resetIdle);document.addEventListener('keydown',resetIdle);resetIdle();
   }
 
   /* Run init when DOM is ready */

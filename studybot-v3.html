@@ -1049,7 +1049,7 @@ window.doSearch=function(q){
   for(var i=0;i<convos.length;i++){
     var c=convos[i];
     for(var j=0;j<c.msgs.length;j++){
-      var m=c.msgs[j],plain=m.text.replace(/<[^>]*>/g,'').toLowerCase();
+      var m=c.msgs[j],plain=(m.t||'').replace(/<[^>]*>/g,'').toLowerCase();
       if(plain.indexOf(q)!==-1){
         results.push({convoId:c.id,title:c.title,preview:plain.substring(0,80)+'…'});break;
       }
@@ -1078,13 +1078,23 @@ window.mmTip=function(node,evt){
 };
 window.mmHide=function(){var tip=$('mmTooltip');if(tip)tip.style.opacity='0';};
 
-// Voice (placeholder)
-window.toggleVoice=function(){showToast('음성 인식 기능은 Step 9에서 구현됩니다','warn');};
-
-// Speak
+// Voice Input (STT)
+var voiceRec=null,voiceActive=false;
+window.toggleVoice=function(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast('음성 인식 미지원 브라우저','warn');return}
+  var vb=$('voiceBtn');
+  if(voiceActive&&voiceRec){voiceRec.stop();return}
+  if(!voiceRec){voiceRec=new SR();voiceRec.lang='ko-KR';voiceRec.interimResults=true;
+    voiceRec.onresult=function(e){var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;var inp=$('userInput');if(inp){inp.value=t}};
+    voiceRec.onend=function(){voiceActive=false;if(vb)vb.textContent='🎤';var inp=$('userInput');if(inp&&inp.value.trim())showToast('✅ 음성 입력 완료','success')};
+    voiceRec.onerror=function(e){voiceActive=false;if(vb)vb.textContent='🎤';if(e.error!=='aborted')showToast('음성 인식 실패','warn')}}
+  voiceActive=true;if(vb)vb.textContent='⏹';voiceRec.start();showToast('🎙 음성 인식 중...','info')
+};
+// TTS (Read Aloud)
 window.speakMsg=function(idx){
   var c=getActive();if(!c||!c.msgs[idx])return;
-  var text=c.msgs[idx].text.replace(/<[^>]*>/g,'');
+  var text=(c.msgs[idx].t||'').replace(/<[^>]*>/g,'');
   if('speechSynthesis' in window){
     speechSynthesis.cancel();
     var u=new SpeechSynthesisUtterance(text);u.lang='ko-KR';u.rate=0.95;
@@ -1204,10 +1214,10 @@ document.addEventListener('keydown',function(e){
     var keys=Object.keys(domainMeta);var idx=parseInt(e.key)-1;
     if(keys[idx]){curDomain=keys[idx];saveStore();renderAll();}
   }
-  // Alt+Z — new convo
-  if(e.altKey&&e.key==='z'){e.preventDefault();newConvo();}
-  // Ctrl+/ — focus input
-  if((e.ctrlKey||e.metaKey)&&e.key==='/'){e.preventDefault();var inp=$('userInput');if(inp)inp.focus();}
+  // Alt+Z — focus mode
+  if(e.altKey&&e.key==='z'){e.preventDefault();doSlash('/focus');}
+  // Ctrl+/ — show shortcuts
+  if((e.ctrlKey||e.metaKey)&&e.key==='/'){e.preventDefault();showToast('Ctrl+K 검색 · Alt+1~6 도메인 · Alt+Z 집중모드 · / 명령어','info');}
 });
 
 /* ═══════════════════════════════════════════

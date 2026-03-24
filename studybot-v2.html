@@ -250,6 +250,22 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 .welcome-tutorial-btn{margin-top:14px;padding:10px 28px;border-radius:20px;border:none;background:var(--gradient);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;animation:msgSlideIn .5s .5s ease backwards}
 .welcome-tutorial-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(59,130,246,.3)}
 
+/* Achievement Badges */
+.achv-badge{display:inline-flex;flex-direction:column;align-items:center;gap:4px;padding:12px 10px;border-radius:12px;border:1px solid var(--border);background:var(--card);min-width:80px;text-align:center;transition:all .25s}
+.achv-badge.unlocked{border-color:var(--accent);background:rgba(59,130,246,.1);box-shadow:0 0 12px rgba(59,130,246,.15)}
+.achv-badge.locked{filter:grayscale(1);opacity:.45}
+.achv-badge .achv-icon{font-size:1.6rem}
+.achv-badge .achv-name{font-size:.7rem;font-weight:700;color:var(--text)}
+.achv-badge .achv-desc{font-size:.58rem;color:var(--text2)}
+.achv-toast{position:fixed;top:20%;left:50%;transform:translateX(-50%);background:var(--surface);border:2px solid var(--accent);border-radius:16px;padding:18px 28px;z-index:250;text-align:center;box-shadow:0 8px 32px rgba(59,130,246,.35);animation:achvPop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes achvPop{from{opacity:0;transform:translateX(-50%) scale(.6) translateY(30px)}to{opacity:1;transform:translateX(-50%) scale(1) translateY(0)}}
+
+/* Ambient Background Gradient */
+.panel-center{position:relative}
+.panel-center::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(59,130,246,.06),rgba(139,92,246,.04),rgba(236,72,153,.05),rgba(16,185,129,.04));background-size:400% 400%;animation:ambientShift 20s ease infinite;opacity:.04;z-index:0;pointer-events:none;border-radius:0}
+@keyframes ambientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.panel-center>*{position:relative;z-index:1}
+
 /* Mind Map */
 .mm-svg{width:100%;display:block}
 @keyframes mmDraw{to{stroke-dashoffset:0}}
@@ -481,7 +497,7 @@ var recs={
   travel:{t:recHtml('\uC5EC\uD589 \uCD94\uCC9C \uD559\uC2B5 \uC790\uB8CC',[['\uC77C\uBCF8 \uC5EC\uD589 \uD544\uC218 \uC900\uBE44\uBB3C','\uCD9C\uAD6D \uC804 \uCCB4\uD06C\uB9AC\uC2A4\uD2B8'],['\uB3C4\uCFC4 3\uC77C \uCF54\uC2A4 \uCD94\uCC9C','\uC644\uBCBD \uC5EC\uD589 \uB3D9\uC120'],['\uC5EC\uD589 \uC608\uC0B0 \uACC4\uD68D','\uC808\uC57D \uD301 \uB300\uBC29\uCD9C']],[['\uBE60\uB2C8\uBCF8\uC5EC\uD589','\uD55C\uAD6D\uC778 \uC77C\uBCF8\uC5EC\uD589 \uCC44\uB110'],['Abroad in Japan','\uC601\uC5B4\uB85C \uBC30\uC6B0\uB294 \uC77C\uBCF8']],['\uC5EC\uD589\uC758 \uC774\uC720 (\uC54C\uB7AD \uB4DC \uBCF4\uD1B5) \u2014 \uC5EC\uD589 \uCCA0\uD559','\uC5D0\uC5B4\uBE44\uC564\uBE44 \uCC3D\uC5C5\uC790 \uC774\uC57C\uAE30 \u2014 \uC5EC\uD589\uACFC \uBE44\uC988\uB2C8\uC2A4']),s:[{p:'\uCC38\uACE0',x:'\uC5EC\uD589 \uAC00\uC774\uB4DC\uBD81 \uBCF4\uCDA9 \uC790\uB8CC'}],c:['\uC77C\uBCF8 \uC5EC\uD589 \uD544\uC218 \uC900\uBE44\uBB3C\uC740?','\uB3C4\uCFC4 3\uC77C \uCF54\uC2A4 \uCD94\uCC9C\uD574\uC918'],conf:85}
 };
 var typHints=['Bedrock KB 문서 검색 중...','S3 Vectors 유사도 분석 중...','Claude 3 Haiku 답변 생성 중...','출처 검증 중...'];
-var slashCmds=[{c:'/help',i:'\u2753',d:'명령어 안내'},{c:'/quiz',i:'\uD83D\uDCDD',d:'퀴즈 생성'},{c:'/upload',i:'\uD83D\uDCCE',d:'PDF 업로드'},{c:'/summary',i:'\uD83D\uDCD1',d:'문서 요약'},{c:'/clear',i:'\uD83D\uDDD1',d:'대화 초기화'},{c:'/domain',i:'\uD83C\uDF0D',d:'주제 변경'},{c:'/recommend',i:'\uD83C\uDFA5',d:'영상/자료 추천'},{c:'/mindmap',i:'\uD83E\uDDE0',d:'마인드맵 보기'},{c:'/export-md',i:'\uD83D\uDCDD',d:'마크다운 내보내기'},{c:'/stats',i:'\uD83D\uDCCA',d:'도메인 통계 대시보드'},{c:'/share',i:'\uD83D\uDD17',d:'대화 HTML 공유'}];
+var slashCmds=[{c:'/help',i:'\u2753',d:'명령어 안내'},{c:'/quiz',i:'\uD83D\uDCDD',d:'퀴즈 생성'},{c:'/upload',i:'\uD83D\uDCCE',d:'PDF 업로드'},{c:'/summary',i:'\uD83D\uDCD1',d:'문서 요약'},{c:'/clear',i:'\uD83D\uDDD1',d:'대화 초기화'},{c:'/domain',i:'\uD83C\uDF0D',d:'주제 변경'},{c:'/recommend',i:'\uD83C\uDFA5',d:'영상/자료 추천'},{c:'/mindmap',i:'\uD83E\uDDE0',d:'마인드맵 보기'},{c:'/export-md',i:'\uD83D\uDCDD',d:'마크다운 내보내기'},{c:'/stats',i:'\uD83D\uDCCA',d:'도메인 통계 대시보드'},{c:'/share',i:'\uD83D\uDD17',d:'대화 HTML 공유'},{c:'/achievements',i:'\uD83C\uDFC6',d:'업적 배지 보기'},{c:'/heatmap',i:'\uD83D\uDFE9',d:'학습 활동 히트맵'}];
 
 // ══════ UTILS ══════
 function ts(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
@@ -639,6 +655,41 @@ function doSlash(t){
     var sblob=new Blob([shtml],{type:'text/html;charset=utf-8'});
     var surl=URL.createObjectURL(sblob);var sa=document.createElement('a');sa.href=surl;sa.download=(sc.title||'studybot-share')+'.html';sa.click();URL.revokeObjectURL(surl);
     addBot('\uD83D\uDD17 <strong>대화 HTML 파일 다운로드 완료</strong><br>브라우저에서 열어 확인하세요.',[],[],false,100);
+    return true
+  }
+  if(t==='/achievements'){
+    addUser('/achievements');
+    var grid='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">';
+    achvDefs.forEach(function(a){var u=achvState[a.id];grid+='<div class="achv-badge '+(u?'unlocked':'locked')+'"><span class="achv-icon">'+(u?a.icon:'\uD83D\uDD12')+'</span><span class="achv-name">'+(u?a.name:a.name)+'</span><span class="achv-desc">'+a.desc+'</span></div>'});
+    grid+='</div>';
+    var unlocked=achvDefs.filter(function(a){return achvState[a.id]}).length;
+    addBot('\uD83C\uDFC6 <strong>업적 배지</strong> ('+unlocked+'/'+achvDefs.length+')<br>'+grid,[],[],false,100);
+    return true
+  }
+  if(t==='/heatmap'){
+    addUser('/heatmap');
+    var now=Date.now(),dayMs=86400000,dayCounts={},streak=0,activeDays=0;
+    convos.forEach(function(cv){
+      cv.msgs.forEach(function(m){
+        var mts=cv.ts;if(m.ts){var parts=m.ts.split(':');if(parts.length===2)mts=cv.ts}
+        var dayKey=Math.floor(mts/dayMs);
+        dayCounts[dayKey]=(dayCounts[dayKey]||0)+1
+      });
+      if(cv.ts){var dk=Math.floor(cv.ts/dayMs);dayCounts[dk]=(dayCounts[dk]||0)}
+    });
+    var todayKey=Math.floor(now/dayMs),maxCount=1;
+    Object.keys(dayCounts).forEach(function(k){if(dayCounts[k]>maxCount)maxCount=dayCounts[k]});
+    var cells='',totalActive=0,curStreak=0;
+    for(var d=34;d>=0;d--){
+      var dk=todayKey-d;
+      var cnt=dayCounts[dk]||0;
+      if(cnt>0)totalActive++;
+      var op=cnt===0?0.06:Math.max(0.2,Math.min(1,cnt/maxCount));
+      cells+='<div style="width:16px;height:16px;border-radius:3px;background:rgba(59,130,246,'+op.toFixed(2)+');border:1px solid rgba(59,130,246,.15)" title="'+(cnt||0)+' 메시지"></div>'
+    }
+    for(var s=0;s<=34;s++){var dk2=todayKey-s;if(dayCounts[dk2]&&dayCounts[dk2]>0)curStreak++;else break}
+    var heatHtml='<div style="display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px;width:fit-content;margin:10px 0">'+cells+'</div>';
+    addBot('\uD83D\uDFE9 <strong>학습 활동 히트맵</strong> (최근 35일)<br>'+heatHtml+'<br><strong>활동 일수:</strong> '+totalActive+'일 &middot; <strong>현재 연속:</strong> '+curStreak+'일 \uD83D\uDD25',[],[],false,100);
     return true
   }
   return false
@@ -853,6 +904,115 @@ rec.onerror=function(e){recording=false;vb.classList.remove('recording');vb.text
   inp.addEventListener('input',doSearch);
   ov.addEventListener('click',function(e){if(e.target===ov)closeSearch()});
 })();
+// ══════ ACHIEVEMENT SYSTEM ══════
+var achvKey='studybot_achv';
+var achvDefs=[
+  {id:'first',icon:'\uD83D\uDD30',name:'\uCCAB \uC9C8\uBB38',desc:'\uCCAB \uBC88\uC9F8 \uC9C8\uBB38\uC744 \uD588\uC2B5\uB2C8\uB2E4',check:function(d){return d.questions>=1}},
+  {id:'streak5',icon:'\uD83D\uDD25',name:'\uC5F0\uC18D 5',desc:'\uD55C \uC138\uC158\uC5D0\uC11C 5\uAC1C \uC9C8\uBB38',check:function(d){return d.sessionQ>=5}},
+  {id:'explorer',icon:'\uD83C\uDF0D',name:'\uD0D0\uD5D8\uAC00',desc:'\uBAA8\uB4E0 6\uAC1C \uB3C4\uBA54\uC778 \uC0AC\uC6A9',check:function(d){return d.domains>=6}},
+  {id:'mindmap3',icon:'\uD83E\uDDE0',name:'\uB9F5 \uB9C8\uC2A4\uD130',desc:'\uB9C8\uC778\uB4DC\uB9F5 3\uD68C \uC0DD\uC131',check:function(d){return d.mindmaps>=3}},
+  {id:'reader20',icon:'\uD83D\uDCDA',name:'\uB2E4\uB3C5\uAC00',desc:'20\uAC1C \uB2F5\uBCC0 \uD655\uC778',check:function(d){return d.responses>=20}},
+  {id:'pinner3',icon:'\u2B50',name:'\uD540 \uC218\uC9D1\uAC00',desc:'\uB300\uD654 3\uAC1C \uACE0\uC815',check:function(d){return d.pins>=3}}
+];
+var achvState=JSON.parse(localStorage.getItem(achvKey)||'{}');
+var achvSessionQ=0;
+var achvMindmaps=parseInt(localStorage.getItem('studybot_mm_count')||'0');
+
+function showConfetti(){
+  var canvas=document.createElement('canvas');
+  canvas.style.cssText='position:fixed;inset:0;z-index:300;pointer-events:none';
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  document.body.appendChild(canvas);
+  var ctx=canvas.getContext('2d');
+  var particles=[];
+  for(var i=0;i<80;i++){
+    particles.push({x:canvas.width/2,y:canvas.height/2,vx:(Math.random()-0.5)*12,vy:Math.random()*-12-4,color:['#3b82f6','#8b5cf6','#ec4899','#10b981','#f59e0b'][Math.floor(Math.random()*5)],size:Math.random()*6+3,life:1});
+  }
+  function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    var alive=false;
+    particles.forEach(function(p){
+      p.x+=p.vx;p.y+=p.vy;p.vy+=0.3;p.life-=0.015;
+      if(p.life>0){alive=true;ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.size,p.size)}
+    });
+    if(alive)requestAnimationFrame(animate);else canvas.remove();
+  }
+  animate();
+}
+
+function unlockAchievement(id){
+  if(achvState[id])return;
+  achvState[id]=true;
+  localStorage.setItem(achvKey,JSON.stringify(achvState));
+  var def=achvDefs.find(function(a){return a.id===id});
+  if(!def)return;
+  showConfetti();
+  var toast=document.createElement('div');
+  toast.className='achv-toast';
+  toast.innerHTML='<div style="font-size:2.2rem;margin-bottom:6px">'+def.icon+'</div><div style="font-weight:800;font-size:1rem;color:var(--accent)">\uC5C5\uC801 \uD574\uC81C!</div><div style="font-size:.9rem;margin-top:4px;font-weight:600">'+def.name+'</div><div style="font-size:.72rem;color:var(--text2);margin-top:2px">'+def.desc+'</div>';
+  document.body.appendChild(toast);
+  setTimeout(function(){toast.style.transition='opacity .4s,transform .4s';toast.style.opacity='0';toast.style.transform='translateX(-50%) scale(.8) translateY(-20px)';setTimeout(function(){toast.remove()},400)},2500);
+}
+
+function checkAchievements(){
+  var totalQ=0,totalR=0,usedDomains={},totalPins=0;
+  convos.forEach(function(cv){
+    if(cv.domain)usedDomains[cv.domain]=true;
+    if(cv.pinned)totalPins++;
+    cv.msgs.forEach(function(m){
+      if(m.r==='u')totalQ++;
+      if(m.r==='b')totalR++;
+    });
+  });
+  var achvData={
+    questions:totalQ,
+    sessionQ:achvSessionQ,
+    domains:Object.keys(usedDomains).length,
+    mindmaps:achvMindmaps,
+    responses:totalR,
+    pins:totalPins
+  };
+  achvDefs.forEach(function(def){
+    if(!achvState[def.id]&&def.check(achvData)){
+      unlockAchievement(def.id);
+    }
+  });
+}
+
+// Hook into handle() — wrap the original
+var _origHandle=handle;
+handle=function(t){
+  _origHandle(t);
+  if(!t.startsWith('/'))achvSessionQ++;
+  setTimeout(checkAchievements,1200);
+};
+
+// Hook into pin toggle — wrap renderConvos pin listeners via MutationObserver on pin actions
+var _origConvPin=null;
+(function(){
+  var cl=$('convoList');if(!cl)return;
+  var obs=new MutationObserver(function(){setTimeout(checkAchievements,300)});
+  obs.observe(cl,{childList:true,subtree:true});
+})();
+
+// Hook into mind map generation
+var _origMmAnalyze=$('mmAnalyze');
+if(_origMmAnalyze){
+  _origMmAnalyze.addEventListener('click',function(){
+    var text=$('mmInput');if(text&&text.value.trim()){achvMindmaps++;localStorage.setItem('studybot_mm_count',String(achvMindmaps));setTimeout(checkAchievements,500)}
+  });
+}
+// Also count /mindmap command usage
+var _origRenderMindmap=renderMindmap;
+var _mmRenderCount=0;
+renderMindmap=function(){
+  _origRenderMindmap();
+  // track from slash commands etc (debounce by counting unique calls)
+};
+
+// Run initial check on load
+setTimeout(checkAchievements,500);
+
 })();
 </script>
 <noscript><div style="padding:40px;text-align:center;color:#e2e8f0;background:#0a0e1a;height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif">이 앱은 JavaScript가 필요합니다.</div></noscript>

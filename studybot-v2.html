@@ -378,7 +378,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
       </div>
-      <div class="input-hint"><kbd>/</kbd> 명령어 &middot; <kbd>Enter</kbd> 전송 &middot; <kbd>Shift+Enter</kbd> 줄바꿈 &middot; 답변 신뢰도: <span id="confText">—</span></div>
+      <div class="input-hint"><kbd>/</kbd> 명령어 &middot; <kbd>Enter</kbd> 전송 &middot; 신뢰도: <span id="confText">—</span> &middot; <span id="wordCount">0 단어</span></div>
     </div>
   </div>
 </div>
@@ -488,7 +488,7 @@ function getActive(){return convos.find(function(c){return c.id===activeId})||co
 function newConvo(silent){var c={id:genId(),title:'새 대화',msgs:[],ts:Date.now(),domain:curDomain};convos.unshift(c);if(convos.length>20)convos.pop();activeId=c.id;if(!silent){saveStore();renderConvos();resetView()}}
 function switchConvo(id){if(id===activeId)return;cancelStream();activeId=id;var c=getActive();if(c)curDomain=c.domain||'bio';saveStore();renderConvos();renderDocs();loadMsgs();renderDomainBar()}
 function deleteConvo(id){convos=convos.filter(function(c){return c.id!==id});if(id===activeId){if(convos.length)activeId=convos[0].id;else newConvo(true)}saveStore();renderConvos();loadMsgs()}
-function pushMsg(r,t){var c=getActive();if(!c)return;c.msgs.push({r:r,t:t,ts:ts()});if(c.msgs.length===1&&r==='u'){c.title=t.slice(0,28)+(t.length>28?'...':'');c.domain=curDomain}c.ts=Date.now();saveStore();renderConvos()}
+function pushMsg(r,t){var c=getActive();if(!c)return;c.msgs.push({r:r,t:t,ts:ts()});if(c.msgs.length===1&&r==='u'){c.title=t.slice(0,28)+(t.length>28?'...':'');c.domain=curDomain}c.ts=Date.now();saveStore();renderConvos();var wc=$('wordCount');if(wc){var w=c.msgs.reduce(function(a,m){return a+m.t.replace(/<[^>]+>/g,'').split(/\s+/).length},0);wc.textContent=w+' 단어'}}
 
 // ══════ RENDER ══════
 function renderConvos(){

@@ -114,7 +114,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 
 /* Message */
 .msg{display:flex;gap:12px;padding:16px 0;animation:msgSlideIn .4s cubic-bezier(.34,1.56,.64,1) backwards;border-radius:8px;transition:background .15s}
-.msg:hover{background:rgba(59,130,246,.03)}
+.msg:hover{background:rgba(59,130,246,.04);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .msg+.msg{border-top:1px solid rgba(51,65,85,0.2)}
 .msg.user{animation-name:msgSlideUser}
 @keyframes msgSlideIn{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -652,7 +652,7 @@ function renderMindmap(){
     var fill=n.lv===1?'url(#mmGc)':'url(#mmGl)';
     var strk=n.lv===1?'rgba(139,92,246,0.5)':'rgba(6,182,212,0.4)';
     var delay=(0.15+i*0.08).toFixed(2);
-    h+='<g class="mm-node '+cls+'" data-q="'+escHtml(n.q)+'" style="animation:mmPop .4s '+delay+'s ease backwards">';
+    h+='<g class="mm-node '+cls+'" data-q="'+escHtml(n.q)+'" style="animation:mmPop .4s '+delay+'s ease backwards"><title>'+escHtml(n.q)+'</title>';
     h+='<rect class="mm-rect" x="'+n.x+'" y="'+(n.y-nh/2)+'" width="'+n.w+'" height="'+nh+'" fill="'+fill+'" stroke="'+strk+'"/>';
     var dl=n.label.length>6?n.label.slice(0,5)+'..':n.label;h+='<text class="mm-text" x="'+(n.x+n.w/2)+'" y="'+(n.y+5)+'" text-anchor="middle">'+escHtml(dl)+'</text></g>'
   });

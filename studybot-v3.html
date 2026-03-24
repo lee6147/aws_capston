@@ -1021,6 +1021,64 @@ button:active:not(:disabled) { transform: scale(.96); }
   .msg.user .msg-bubble { background: #e8e8ff; color: #333; }
   .msg.bot .msg-bubble { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
 }
+/* ══════════════════════════════════════════
+   SRS REVIEW NOTIFICATION
+   ══════════════════════════════════════════ */
+.srs-notification {
+  position: fixed;
+  bottom: 80px; right: 24px;
+  z-index: 190;
+  background: var(--bg-surface);
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  padding: 14px 18px;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn .3s var(--ease-out);
+  max-width: 320px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.srs-notification-title { font-size: 13px; font-weight: 600; color: var(--accent); display: flex; align-items: center; gap: 6px; }
+.srs-notification-fact { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+.srs-notification-btns { display: flex; gap: 6px; }
+.srs-notification-btns button {
+  flex: 1; padding: 6px 12px; border-radius: 8px;
+  font-size: 12px; font-weight: 600; transition: all .15s;
+}
+.srs-btn-easy { background: var(--success); color: #fff; }
+.srs-btn-easy:hover { opacity: .85; }
+.srs-btn-again { background: var(--error); color: #fff; }
+.srs-btn-again:hover { opacity: .85; }
+.srs-btn-dismiss { background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border); }
+.srs-btn-dismiss:hover { background: var(--bg-hover); }
+
+/* ══════════════════════════════════════════
+   QUIZ UI
+   ══════════════════════════════════════════ */
+.quiz-option {
+  display: block; width: 100%; text-align: left;
+  padding: 10px 14px; margin: 6px 0;
+  border-radius: 10px; border: 1px solid var(--border);
+  background: var(--bg-elevated); color: var(--text-primary);
+  font-size: 13px; cursor: pointer; transition: all .15s;
+}
+.quiz-option:hover { border-color: var(--accent); background: var(--accent-soft); }
+.quiz-option.correct { border-color: var(--success); background: rgba(34,197,94,.15); color: var(--success); }
+.quiz-option.wrong { border-color: var(--error); background: rgba(239,68,68,.15); color: var(--error); }
+.quiz-option:disabled { cursor: default; opacity: .8; }
+
+/* ══════════════════════════════════════════
+   ANALYTICS BARS
+   ══════════════════════════════════════════ */
+.analytics-bar-wrap { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+.analytics-bar-label { font-size: 12px; min-width: 80px; color: var(--text-secondary); }
+.analytics-bar { flex: 1; height: 14px; background: var(--bg-hover); border-radius: 7px; overflow: hidden; }
+.analytics-bar-fill { height: 100%; border-radius: 7px; transition: width .5s var(--ease-out); }
+
+/* Mind map clickable nodes */
+.mm-node { cursor: pointer; }
+.mm-node:hover rect { filter: drop-shadow(0 2px 8px rgba(99,102,241,0.4)) !important; }
+.mm-node:hover text { fill: var(--accent) !important; }
+
 /* Ambient gradient */
 .chat-area::before {
   content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
@@ -1392,7 +1450,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     catch(e) { return defaultStore(); }
   }
   function defaultStore() {
-    return { convos: {}, activeId: null, curDomain: 'bio', theme: 'dark', streak: { count: 0, days: [] }, achievements: [], notes: '', bookmarks: [] };
+    return { convos: {}, activeId: null, curDomain: 'bio', theme: 'dark', streak: { count: 0, days: [] }, achievements: [], notes: '', bookmarks: [], quizHistory: [], topicStatus: {}, studyStartTime: Date.now() };
   }
   function saveStore() {
     store.activeId = activeId;
@@ -1538,7 +1596,11 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     { cmd: '/achievements', icon: '\uD83C\uDFC6', desc: 'Show achievements', fn: cmdAchievements },
     { cmd: '/export', icon: '\uD83D\uDCE4', desc: 'Export conversation as text', fn: cmdExport },
     { cmd: '/voice', icon: '\uD83C\uDFA4', desc: 'Toggle voice input', fn: cmdVoice },
-    { cmd: '/shortcuts', icon: '\u2328\uFE0F', desc: 'Show keyboard shortcuts', fn: cmdShortcuts }
+    { cmd: '/shortcuts', icon: '\u2328\uFE0F', desc: 'Show keyboard shortcuts', fn: cmdShortcuts },
+    { cmd: '/review', icon: '\uD83D\uDCDA', desc: '복습 카드 확인 (SRS)', fn: cmdReview },
+    { cmd: '/quiz', icon: '\uD83D\uDCDD', desc: '5문제 퀴즈 시작', fn: cmdQuiz },
+    { cmd: '/progress', icon: '\uD83D\uDCC8', desc: '학습 진행 현황', fn: cmdProgress },
+    { cmd: '/analytics', icon: '\uD83D\uDCCA', desc: '학습 분석 대시보드', fn: cmdAnalytics }
   ];
 
   /* ══════════════════════════════════════════
@@ -1918,6 +1980,10 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     if (match) {
       setTimeout(function() {
         addBot(match.a, match.sources, match.conf, true);
+        /* SRS: auto-extract flashcard */
+        extractFlashcard(match.q, match.a, curDomain);
+        /* Progress: mark topic as in-progress */
+        updateTopicStatus(curDomain, match.q, 'inprogress');
         busy = false;
       }, 600);
     } else {
@@ -2041,6 +2107,510 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   }
   function cmdVoice() { toggleVoice(); }
   function cmdShortcuts() { toggleShortcuts(); }
+
+  /* ══════════════════════════════════════════
+     FEATURE 1 — Mind Map Click → Chat Explanation
+     ══════════════════════════════════════════ */
+  function mindmapNodeClick(label) {
+    /* Find matching Q&A in current domain */
+    var d = domains[curDomain];
+    if (!d) return;
+    var match = null;
+    var lbl = label.toLowerCase();
+    d.qa.forEach(function(qa) {
+      if (qa.q.toLowerCase().indexOf(lbl) !== -1 || lbl.indexOf(qa.q.toLowerCase().split(/\s+/)[0]) !== -1) {
+        match = qa;
+      }
+    });
+    /* Try keyword match */
+    if (!match) {
+      d.qa.forEach(function(qa) {
+        var words = label.split(/[\s/]+/);
+        words.forEach(function(w) {
+          if (w.length > 1 && qa.q.toLowerCase().indexOf(w.toLowerCase()) !== -1) match = qa;
+          if (w.length > 1 && qa.a.toLowerCase().indexOf(w.toLowerCase()) !== -1 && !match) match = qa;
+        });
+      });
+    }
+    /* Close mind map drawer */
+    closeMindmap();
+    /* Send to chat */
+    if (match) {
+      handle(match.q);
+    } else {
+      handle(label + '에 대해 설명해줘');
+    }
+  }
+
+  /* ══════════════════════════════════════════
+     FEATURE 2 — Spaced Repetition System (SRS)
+     ══════════════════════════════════════════ */
+  var SRS_KEY = 'studybot_srs';
+  var srsIntervals = [60000, 600000, 3600000, 86400000, 259200000]; /* 1m,10m,1h,1d,3d */
+  var srsNotifEl = null;
+  var srsCheckTimer = null;
+
+  function loadSrs() {
+    try { return JSON.parse(localStorage.getItem(SRS_KEY)) || []; }
+    catch(e) { return []; }
+  }
+  function saveSrs(cards) {
+    try { localStorage.setItem(SRS_KEY, JSON.stringify(cards)); } catch(e) {}
+  }
+
+  function extractFlashcard(question, answer, domain) {
+    /* Extract 1-2 key facts from answer */
+    var sentences = answer.split(/[.!]\s*/).filter(function(s) { return s.trim().length > 10; });
+    var cards = loadSrs();
+    var fact = question;
+    var ansText = sentences.length > 0 ? sentences[0].trim() : answer.slice(0, 80);
+    /* Avoid duplicates */
+    var exists = cards.some(function(c) { return c.fact === fact; });
+    if (!exists) {
+      cards.push({
+        id: uid(),
+        fact: fact,
+        answer: ansText,
+        domain: domain || curDomain,
+        nextReview: Date.now() + srsIntervals[0],
+        interval: srsIntervals[0],
+        ease: 2.5,
+        created: Date.now()
+      });
+      saveSrs(cards);
+    }
+  }
+
+  function getDueCards() {
+    var cards = loadSrs();
+    var now = Date.now();
+    return cards.filter(function(c) { return c.nextReview <= now; });
+  }
+
+  function srsMarkEasy(cardId) {
+    var cards = loadSrs();
+    var card = cards.find(function(c) { return c.id === cardId; });
+    if (!card) return;
+    var idx = srsIntervals.indexOf(card.interval);
+    var nextIdx = Math.min(idx + 1, srsIntervals.length - 1);
+    card.interval = srsIntervals[nextIdx];
+    card.nextReview = Date.now() + card.interval;
+    card.ease = Math.min(card.ease + 0.15, 3.0);
+    saveSrs(cards);
+    showToast('잘했어요! 다음 복습: ' + formatInterval(card.interval), 'success');
+  }
+
+  function srsMarkAgain(cardId) {
+    var cards = loadSrs();
+    var card = cards.find(function(c) { return c.id === cardId; });
+    if (!card) return;
+    card.interval = srsIntervals[0];
+    card.nextReview = Date.now() + srsIntervals[0];
+    card.ease = Math.max(card.ease - 0.2, 1.3);
+    saveSrs(cards);
+    showToast('1분 후 다시 복습합니다', 'info');
+  }
+
+  function formatInterval(ms) {
+    if (ms < 60000) return Math.round(ms / 1000) + '초';
+    if (ms < 3600000) return Math.round(ms / 60000) + '분';
+    if (ms < 86400000) return Math.round(ms / 3600000) + '시간';
+    return Math.round(ms / 86400000) + '일';
+  }
+
+  function showSrsNotification() {
+    var due = getDueCards();
+    if (due.length === 0) return;
+    if (srsNotifEl && srsNotifEl.parentNode) srsNotifEl.parentNode.removeChild(srsNotifEl);
+    var card = due[0];
+    srsNotifEl = document.createElement('div');
+    srsNotifEl.className = 'srs-notification';
+    srsNotifEl.innerHTML =
+      '<div class="srs-notification-title">📚 복습 카드 (' + due.length + '장 대기)</div>' +
+      '<div class="srs-notification-fact"><strong>Q:</strong> ' + escHtml(card.fact) + '</div>' +
+      '<div class="srs-notification-fact"><strong>A:</strong> ' + escHtml(card.answer) + '</div>' +
+      '<div class="srs-notification-btns">' +
+        '<button class="srs-btn-easy" data-srs-id="' + card.id + '">알겠어요 ✓</button>' +
+        '<button class="srs-btn-again" data-srs-id="' + card.id + '">다시 볼게요</button>' +
+        '<button class="srs-btn-dismiss">나중에</button>' +
+      '</div>';
+    document.body.appendChild(srsNotifEl);
+    srsNotifEl.querySelector('.srs-btn-easy').addEventListener('click', function() {
+      srsMarkEasy(card.id);
+      if (srsNotifEl.parentNode) srsNotifEl.parentNode.removeChild(srsNotifEl);
+      /* Update progress on easy */
+      updateTopicStatus(card.domain, card.fact, 'mastered');
+      setTimeout(showSrsNotification, 500);
+    });
+    srsNotifEl.querySelector('.srs-btn-again').addEventListener('click', function() {
+      srsMarkAgain(card.id);
+      if (srsNotifEl.parentNode) srsNotifEl.parentNode.removeChild(srsNotifEl);
+      setTimeout(showSrsNotification, 500);
+    });
+    srsNotifEl.querySelector('.srs-btn-dismiss').addEventListener('click', function() {
+      if (srsNotifEl.parentNode) srsNotifEl.parentNode.removeChild(srsNotifEl);
+    });
+  }
+
+  function startSrsChecker() {
+    if (srsCheckTimer) clearInterval(srsCheckTimer);
+    srsCheckTimer = setInterval(function() {
+      var due = getDueCards();
+      if (due.length > 0 && !document.querySelector('.srs-notification')) {
+        showSrsNotification();
+      }
+    }, 30000); /* Check every 30s */
+    /* Initial check after 5s */
+    setTimeout(function() {
+      var due = getDueCards();
+      if (due.length > 0) showSrsNotification();
+    }, 5000);
+  }
+
+  function cmdReview() {
+    var cards = loadSrs();
+    var due = getDueCards();
+    if (cards.length === 0) {
+      ensureConvo();
+      addBot('아직 복습 카드가 없습니다.\n질문을 하면 자동으로 플래시카드가 생성됩니다!', [], 0, false);
+      return;
+    }
+    if (due.length === 0) {
+      var nextCard = cards.slice().sort(function(a,b){ return a.nextReview - b.nextReview; })[0];
+      var waitTime = formatInterval(nextCard.nextReview - Date.now());
+      ensureConvo();
+      addBot('모든 카드를 복습했습니다! 🎉\n\n총 카드: ' + cards.length + '장\n다음 복습까지: ' + waitTime, [], 0, false);
+      return;
+    }
+    ensureConvo();
+    var text = '📚 복습할 카드가 ' + due.length + '장 있습니다!\n\n';
+    due.slice(0, 5).forEach(function(c, i) {
+      text += (i + 1) + '. [' + (domains[c.domain] ? domains[c.domain].icon : '') + '] ' + c.fact + '\n   → ' + c.answer + '\n\n';
+    });
+    if (due.length > 5) text += '... 그리고 ' + (due.length - 5) + '장 더\n';
+    text += '\n아래 알림에서 "알겠어요" / "다시 볼게요"로 복습하세요!';
+    addBot(text, [], 0, false);
+    setTimeout(showSrsNotification, 300);
+  }
+
+  /* ══════════════════════════════════════════
+     FEATURE 3 — Interactive Quiz System
+     ══════════════════════════════════════════ */
+  var quizState = { active: false, questions: [], current: 0, score: 0, domain: '' };
+
+  function cmdQuiz() {
+    var d = domains[curDomain];
+    if (!d || d.qa.length < 2) {
+      showToast('이 도메인에 퀴즈를 만들 질문이 부족합니다', 'warning');
+      return;
+    }
+    ensureConvo();
+    /* Generate 5 questions (or as many as available) */
+    var allQa = d.qa.slice();
+    shuffle(allQa);
+    var qCount = Math.min(5, allQa.length);
+    var questions = [];
+    for (var i = 0; i < qCount; i++) {
+      var correct = allQa[i];
+      /* Generate 3 wrong options from other questions' answers */
+      var wrongPool = d.qa.filter(function(q) { return q !== correct; }).map(function(q) {
+        var sentences = q.a.split(/[.!]\s*/);
+        return sentences[0] ? sentences[0].trim().slice(0, 60) : q.a.slice(0, 60);
+      });
+      shuffle(wrongPool);
+      var wrongs = wrongPool.slice(0, 3);
+      /* If not enough wrongs, add generic ones */
+      while (wrongs.length < 3) wrongs.push('해당 사항 없음');
+      var correctShort = correct.a.split(/[.!]\s*/)[0].trim().slice(0, 60);
+      var options = wrongs.concat([correctShort]);
+      shuffle(options);
+      questions.push({
+        question: correct.q,
+        options: options,
+        correctIdx: options.indexOf(correctShort),
+        correctAnswer: correctShort,
+        fullAnswer: correct.a,
+        topic: correct.q
+      });
+    }
+    quizState = { active: true, questions: questions, current: 0, score: 0, domain: curDomain };
+    showQuizQuestion();
+  }
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function showQuizQuestion() {
+    if (!quizState.active || quizState.current >= quizState.questions.length) {
+      endQuiz();
+      return;
+    }
+    var q = quizState.questions[quizState.current];
+    var num = quizState.current + 1;
+    var total = quizState.questions.length;
+    var text = '📝 퀴즈 [' + num + '/' + total + '] — ' + (domains[quizState.domain] ? domains[quizState.domain].name : '') + '\n\n';
+    text += '❓ ' + q.question + '\n\n';
+    var convo = ensureConvo();
+    var msg = { role: 'bot', text: '', time: timeStr(), ts: Date.now(), isQuiz: true };
+    pushMsg(convo, msg);
+
+    /* Render with quiz buttons */
+    var inner = $('messagesInner');
+    if (!inner) return;
+    renderChat();
+    /* Append quiz options to the last bot message */
+    var msgEls = inner.querySelectorAll('.msg.bot');
+    var lastMsg = msgEls[msgEls.length - 1];
+    if (!lastMsg) return;
+    var bubble = lastMsg.querySelector('.msg-bubble');
+    if (!bubble) return;
+    bubble.innerHTML = formatBotText(text);
+    var optDiv = document.createElement('div');
+    optDiv.style.marginTop = '8px';
+    q.options.forEach(function(opt, oi) {
+      var btn = document.createElement('button');
+      btn.className = 'quiz-option';
+      btn.textContent = String.fromCharCode(65 + oi) + '. ' + opt;
+      btn.setAttribute('data-oi', oi);
+      btn.addEventListener('click', function() { handleQuizAnswer(oi, optDiv); });
+      optDiv.appendChild(btn);
+    });
+    bubble.appendChild(optDiv);
+    scrollToBottom();
+  }
+
+  function handleQuizAnswer(selectedIdx, optDiv) {
+    var q = quizState.questions[quizState.current];
+    var btns = optDiv.querySelectorAll('.quiz-option');
+    var isCorrect = selectedIdx === q.correctIdx;
+    if (isCorrect) quizState.score++;
+
+    /* Disable all and highlight */
+    btns.forEach(function(b, i) {
+      b.disabled = true;
+      if (i === q.correctIdx) b.classList.add('correct');
+      if (i === selectedIdx && !isCorrect) b.classList.add('wrong');
+    });
+
+    /* Show explanation */
+    var expDiv = document.createElement('div');
+    expDiv.style.cssText = 'margin-top:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg-surface);font-size:13px;line-height:1.6';
+    expDiv.innerHTML = (isCorrect ? '<strong style="color:var(--success)">✅ 정답!</strong>' : '<strong style="color:var(--error)">❌ 오답!</strong>') +
+      '<br><br><strong>정답:</strong> ' + escHtml(q.correctAnswer) + '<br><br><strong>설명:</strong> ' + escHtml(q.fullAnswer);
+    optDiv.appendChild(expDiv);
+
+    /* Update topic progress */
+    if (isCorrect) {
+      updateTopicStatus(quizState.domain, q.topic, 'mastered');
+    }
+
+    /* Next question after delay */
+    quizState.current++;
+    scrollToBottom();
+    setTimeout(function() {
+      if (quizState.active) showQuizQuestion();
+    }, 2000);
+  }
+
+  function endQuiz() {
+    quizState.active = false;
+    var score = quizState.score;
+    var total = quizState.questions.length;
+    var pct = Math.round(score / total * 100);
+    var msg;
+    if (score === total) msg = score + '/' + total + ' 완벽! 🎉 모든 문제를 맞혔습니다!';
+    else if (pct >= 80) msg = score + '/' + total + ' 훌륭해요! 👏 거의 다 맞혔습니다!';
+    else if (pct >= 60) msg = score + '/' + total + ' 좋아요! 💪 조금만 더 복습하세요!';
+    else msg = score + '/' + total + ' — 복습이 필요합니다. 틀린 주제를 다시 공부해보세요!';
+
+    var text = '\n📊 퀴즈 결과\n\n' + msg + '\n도메인: ' + (domains[quizState.domain] ? domains[quizState.domain].icon + ' ' + domains[quizState.domain].name : '') + '\n점수: ' + pct + '%';
+
+    /* Save quiz history */
+    if (!store.quizHistory) store.quizHistory = [];
+    store.quizHistory.push({
+      domain: quizState.domain,
+      score: score,
+      total: total,
+      pct: pct,
+      ts: Date.now()
+    });
+    saveStore();
+
+    addBot(text, [], 0, false);
+    if (score === total) showConfetti();
+  }
+
+  /* ══════════════════════════════════════════
+     FEATURE 4 — Study Progress Path
+     ══════════════════════════════════════════ */
+  function updateTopicStatus(domain, question, status) {
+    if (!store.topicStatus) store.topicStatus = {};
+    if (!store.topicStatus[domain]) store.topicStatus[domain] = {};
+    var cur = store.topicStatus[domain][question];
+    /* Only upgrade: locked → inprogress → mastered */
+    if (status === 'mastered' || (status === 'inprogress' && cur !== 'mastered')) {
+      store.topicStatus[domain][question] = status;
+      saveStore();
+    }
+  }
+
+  function getTopicProgress(domain) {
+    var d = domains[domain];
+    if (!d) return { total: 0, mastered: 0, inprogress: 0, locked: 0, topics: [] };
+    var statuses = store.topicStatus && store.topicStatus[domain] ? store.topicStatus[domain] : {};
+    var topics = d.qa.map(function(qa) {
+      var s = statuses[qa.q] || 'locked';
+      return { q: qa.q, status: s };
+    });
+    var mastered = topics.filter(function(t) { return t.status === 'mastered'; }).length;
+    var inprogress = topics.filter(function(t) { return t.status === 'inprogress'; }).length;
+    var locked = topics.filter(function(t) { return t.status === 'locked'; }).length;
+    return { total: topics.length, mastered: mastered, inprogress: inprogress, locked: locked, topics: topics };
+  }
+
+  function cmdProgress() {
+    ensureConvo();
+    var text = '📈 학습 진행 현황\n\n';
+    var totalMastered = 0, totalAll = 0;
+    Object.keys(domains).forEach(function(key) {
+      var d = domains[key];
+      var prog = getTopicProgress(key);
+      totalMastered += prog.mastered;
+      totalAll += prog.total;
+      var bar = '';
+      prog.topics.forEach(function(t) {
+        if (t.status === 'mastered') bar += '✅';
+        else if (t.status === 'inprogress') bar += '🔄';
+        else bar += '🔒';
+      });
+      var pct = prog.total > 0 ? Math.round(prog.mastered / prog.total * 100) : 0;
+      text += d.icon + ' ' + d.name + ': ' + bar + ' (' + pct + '% 완료)\n';
+      prog.topics.forEach(function(t) {
+        var icon = t.status === 'mastered' ? '  ✅' : (t.status === 'inprogress' ? '  🔄' : '  🔒');
+        text += icon + ' ' + t.q.slice(0, 30) + '\n';
+      });
+      text += '\n';
+    });
+    var totalPct = totalAll > 0 ? Math.round(totalMastered / totalAll * 100) : 0;
+    text += '━━━━━━━━━━━━━━━━\n';
+    text += '전체 진행률: ' + totalMastered + '/' + totalAll + ' (' + totalPct + '%)';
+    if (totalPct === 100) text += '\n🏆 모든 주제를 마스터했습니다!';
+    else if (totalPct >= 50) text += '\n💪 절반 이상 완료! 계속 힘내세요!';
+    else text += '\n📚 아직 갈 길이 멀어요. 꾸준히 학습하세요!';
+    addBot(text, [], 0, false);
+  }
+
+  /* ══════════════════════════════════════════
+     FEATURE 5 — Study Analytics Dashboard
+     ══════════════════════════════════════════ */
+  function cmdAnalytics() {
+    ensureConvo();
+    /* Calculate study time */
+    var startTime = store.studyStartTime || Date.now();
+    var totalMinutes = Math.round((Date.now() - startTime) / 60000);
+    var hours = Math.floor(totalMinutes / 60);
+    var mins = totalMinutes % 60;
+
+    /* Questions per domain */
+    var domainCounts = {};
+    Object.keys(domains).forEach(function(k) { domainCounts[k] = 0; });
+    var totalQ = 0;
+    Object.keys(store.convos).forEach(function(id) {
+      var c = store.convos[id];
+      if (c.msgs) {
+        c.msgs.forEach(function(m) {
+          if (m.role === 'user') {
+            totalQ++;
+            if (c.domain && domainCounts[c.domain] !== undefined) domainCounts[c.domain]++;
+          }
+        });
+      }
+    });
+
+    /* Find max for bar scaling */
+    var maxCount = 1;
+    Object.keys(domainCounts).forEach(function(k) { if (domainCounts[k] > maxCount) maxCount = domainCounts[k]; });
+
+    /* Quiz accuracy trend */
+    var history = store.quizHistory || [];
+    var recentQuizzes = history.slice(-10);
+
+    /* Weak topics — topics with quiz failures */
+    var weakTopics = [];
+    Object.keys(domains).forEach(function(key) {
+      var prog = getTopicProgress(key);
+      prog.topics.forEach(function(t) {
+        if (t.status !== 'mastered') {
+          weakTopics.push({ domain: key, topic: t.q, status: t.status });
+        }
+      });
+    });
+
+    /* Build analytics text */
+    var text = '📊 학습 분석 대시보드\n';
+    text += '━━━━━━━━━━━━━━━━━━━━\n\n';
+
+    /* Study time */
+    text += '⏱ 총 학습 시간: ' + hours + '시간 ' + mins + '분\n';
+    text += '📝 총 질문 수: ' + totalQ + '개\n';
+    text += '🔥 현재 스트릭: ' + (store.streak ? store.streak.count : 0) + '일\n\n';
+
+    /* Questions per domain bar chart */
+    text += '📊 도메인별 질문 수:\n';
+    Object.keys(domains).forEach(function(k) {
+      var d = domains[k];
+      var cnt = domainCounts[k];
+      var barLen = maxCount > 0 ? Math.round(cnt / maxCount * 15) : 0;
+      var bar = '';
+      for (var i = 0; i < barLen; i++) bar += '█';
+      for (var i = barLen; i < 15; i++) bar += '░';
+      text += d.icon + ' ' + d.name.padEnd(15) + ' ' + bar + ' ' + cnt + '\n';
+    });
+    text += '\n';
+
+    /* Quiz accuracy trend */
+    if (recentQuizzes.length > 0) {
+      text += '📈 퀴즈 정답률 (최근 ' + recentQuizzes.length + '회):\n';
+      recentQuizzes.forEach(function(q, i) {
+        var barLen = Math.round(q.pct / 100 * 10);
+        var bar = '';
+        for (var j = 0; j < barLen; j++) bar += '▓';
+        for (var j = barLen; j < 10; j++) bar += '░';
+        var dIcon = domains[q.domain] ? domains[q.domain].icon : '?';
+        text += '  ' + (i + 1) + '. ' + dIcon + ' ' + bar + ' ' + q.pct + '% (' + q.score + '/' + q.total + ')\n';
+      });
+      var avgPct = Math.round(recentQuizzes.reduce(function(s,q){ return s+q.pct; }, 0) / recentQuizzes.length);
+      text += '  평균: ' + avgPct + '%\n\n';
+    } else {
+      text += '📈 퀴즈 기록이 없습니다. /quiz로 시작하세요!\n\n';
+    }
+
+    /* Weak topics */
+    if (weakTopics.length > 0) {
+      text += '⚠️ 약점 주제 (복습 필요):\n';
+      weakTopics.slice(0, 6).forEach(function(t) {
+        var dIcon = domains[t.domain] ? domains[t.domain].icon : '?';
+        var statusIcon = t.status === 'inprogress' ? '🔄' : '🔒';
+        text += '  ' + statusIcon + ' ' + dIcon + ' ' + t.topic.slice(0, 35) + '\n';
+      });
+      if (weakTopics.length > 6) text += '  ... 그리고 ' + (weakTopics.length - 6) + '개 더\n';
+      text += '\n';
+    }
+
+    /* SRS stats */
+    var srsCards = loadSrs();
+    var dueCards = getDueCards();
+    text += '📚 플래시카드: ' + srsCards.length + '장 (복습 대기: ' + dueCards.length + '장)\n';
+    text += '━━━━━━━━━━━━━━━━━━━━\n';
+    text += '💡 팁: /quiz로 퀴즈, /review로 복습, /progress로 진행 현황을 확인하세요!';
+
+    addBot(text, [], 0, false);
+  }
 
   /* ══════════════════════════════════════════
      FEATURES — 북마크
@@ -2283,7 +2853,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
         textFill = 'var(--text-secondary)';
         stroke = 'var(--border)';
       }
-      inner += '<g class="mm-node">';
+      inner += '<g class="mm-node" data-label="' + escHtml(n.label) + '" style="cursor:pointer">';
       inner += '<rect x="' + (n.x) + '" y="' + (n.y - n.h / 2) + '" width="' + n.w + '" height="' + n.h + '" rx="' + rx + '" fill="' + fill + '"' + (stroke !== 'none' ? ' stroke="' + stroke + '" stroke-width="1"' : '') + ' style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.15))"/>';
       inner += '<text x="' + (n.x + n.w / 2) + '" y="' + (n.y + n.fontSize * 0.35) + '" text-anchor="middle" fill="' + textFill + '" font-size="' + n.fontSize + '" font-family="Inter, sans-serif" font-weight="' + (n.level === 0 ? '700' : '500') + '">' + escHtml(n.label) + '</text>';
       inner += '</g>';
@@ -2500,6 +3070,13 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   function initMindmapPanZoom() {
     var canvas = $('mindmapCanvas');
     if (!canvas) return;
+    /* Mind map node click → chat explanation (Feature 1) */
+    canvas.addEventListener('click', function(e) {
+      var node = e.target.closest('.mm-node');
+      if (!node) return;
+      var label = node.getAttribute('data-label');
+      if (label) mindmapNodeClick(label);
+    });
     canvas.addEventListener('mousedown', function(e) {
       if (e.target.closest('.mm-node')) return;
       mmDragging = true;
@@ -3027,6 +3604,12 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       var ci = $('chatInput');
       if (ci) ci.focus();
     }
+
+    /* Initialize study start time if not set */
+    if (!store.studyStartTime) { store.studyStartTime = Date.now(); saveStore(); }
+
+    /* Start SRS review checker */
+    startSrsChecker();
 
     /* Proactive suggestion after 30s idle */
     var idleTimer=null;

@@ -867,7 +867,7 @@ input, textarea { font-family: inherit; color: inherit; }
 }
 .achieve-close-btn:hover { background: var(--accent-hover); }
 
-/* Quick notes overlay */
+/* 빠른 메모 overlay */
 .notes-overlay {
   display: none;
   position: fixed; inset: 0;
@@ -912,7 +912,7 @@ input, textarea { font-family: inherit; color: inherit; }
   display: flex; justify-content: space-between;
 }
 
-/* Bookmarks panel overlay */
+/* 북마크 panel overlay */
 .bookmarks-overlay {
   display: none;
   position: fixed; inset: 0;
@@ -977,7 +977,7 @@ input, textarea { font-family: inherit; color: inherit; }
 .shortcut-keys { display: flex; gap: 4px; }
 .shortcut-key { padding: 3px 8px; border-radius: 6px; background: var(--bg-elevated); border: 1px solid var(--border); font-size: 11px; font-weight: 600; font-family: var(--font); }
 
-/* Focus mode */
+/* 집중 모드 */
 .focus-mode .sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); width: 0; min-width: 0; }
 .focus-mode .topbar { display: none; }
 .focus-mode .input-area { border-top: none; }
@@ -1081,14 +1081,14 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   <div class="mindmap-resize" id="mindmapResize"></div>
   <div class="mindmap-header">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-7.07-15.07l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
-    <span class="mindmap-title">Mind Map</span>
+    <span class="mindmap-title">마인드맵</span>
     <button class="mindmap-close" id="mindmapClose" title="닫기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
   </div>
   <div class="mindmap-toolbar">
     <button class="mm-tool-btn" id="mmZoomIn">+ Zoom</button>
     <button class="mm-tool-btn" id="mmZoomOut">- Zoom</button>
     <button class="mm-tool-btn" id="mmReset">Reset</button>
-    <button class="mm-tool-btn" id="mmExport">Export PNG</button>
+    <button class="mm-tool-btn" id="mmExport">PNG 내보내기</button>
   </div>
   <div class="mindmap-canvas" id="mindmapCanvas">
     <svg id="mindmapSvg" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -1101,7 +1101,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     <div class="achieve-badge" id="achieveBadge"></div>
     <div class="achieve-title" id="achieveTitle"></div>
     <div class="achieve-desc" id="achieveDesc"></div>
-    <button class="achieve-close-btn" id="achieveClose">Nice!</button>
+    <button class="achieve-close-btn" id="achieveClose">잘했어요!</button>
   </div>
 </div>
 
@@ -1109,13 +1109,13 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
 <div class="notes-overlay" id="notesOverlay">
   <div class="notes-card">
     <div class="notes-header">
-      <span class="notes-header-title">Quick Notes</span>
+      <span class="notes-header-title">빠른 메모</span>
       <button class="mindmap-close" id="notesClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <textarea id="notesArea" placeholder="학습 메모를 자유롭게 작성하세요..."></textarea>
     <div class="notes-footer">
       <span id="notesCharCount">0 characters</span>
-      <span>Auto-saved</span>
+      <span>자동 저장됨</span>
     </div>
   </div>
 </div>
@@ -1124,7 +1124,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
 <div class="bookmarks-overlay" id="bookmarksOverlay">
   <div class="bookmarks-card">
     <div class="bookmarks-header">
-      <span class="bookmarks-header-title">Bookmarks</span>
+      <span class="bookmarks-header-title">북마크</span>
       <button class="mindmap-close" id="bookmarksClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="bookmarks-list" id="bookmarksList"></div>
@@ -1140,13 +1140,13 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     </div>
     <div class="shortcut-row"><span class="shortcut-label">Search</span><div class="shortcut-keys"><span class="shortcut-key">Ctrl</span><span class="shortcut-key">K</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">Shortcuts help</span><div class="shortcut-keys"><span class="shortcut-key">Ctrl</span><span class="shortcut-key">/</span></div></div>
-    <div class="shortcut-row"><span class="shortcut-label">Focus mode</span><div class="shortcut-keys"><span class="shortcut-key">Alt</span><span class="shortcut-key">Z</span></div></div>
-    <div class="shortcut-row"><span class="shortcut-label">Domain 1-6</span><div class="shortcut-keys"><span class="shortcut-key">Alt</span><span class="shortcut-key">1-6</span></div></div>
+    <div class="shortcut-row"><span class="shortcut-label">집중 모드</span><div class="shortcut-keys"><span class="shortcut-key">Alt</span><span class="shortcut-key">Z</span></div></div>
+    <div class="shortcut-row"><span class="shortcut-label">도메인 1-6</span><div class="shortcut-keys"><span class="shortcut-key">Alt</span><span class="shortcut-key">1-6</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">메시지 전송</span><div class="shortcut-keys"><span class="shortcut-key">Enter</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">New line</span><div class="shortcut-keys"><span class="shortcut-key">Shift</span><span class="shortcut-key">Enter</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">New conversation</span><div class="shortcut-keys"><span class="shortcut-key">Ctrl</span><span class="shortcut-key">N</span></div></div>
-    <div class="shortcut-row"><span class="shortcut-label">Quick notes</span><div class="shortcut-keys"><span class="shortcut-key">Ctrl</span><span class="shortcut-key">.</span></div></div>
-    <div class="shortcut-row"><span class="shortcut-label">Close overlay</span><div class="shortcut-keys"><span class="shortcut-key">Esc</span></div></div>
+    <div class="shortcut-row"><span class="shortcut-label">빠른 메모</span><div class="shortcut-keys"><span class="shortcut-key">Ctrl</span><span class="shortcut-key">.</span></div></div>
+    <div class="shortcut-row"><span class="shortcut-label">닫기</span><div class="shortcut-keys"><span class="shortcut-key">Esc</span></div></div>
   </div>
 </div>
 
@@ -1169,7 +1169,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     </div>
 
     <div class="domain-section">
-      <div class="domain-section-label">Domains</div>
+      <div class="domain-section-label">도메인</div>
       <div class="domain-chips" id="domainChips"></div>
     </div>
 
@@ -1184,7 +1184,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       <div class="streak-fire">&#x1F525;</div>
       <div class="streak-info">
         <div class="streak-count" id="streakCount">0 day streak</div>
-        <div class="streak-label">Keep learning!</div>
+        <div class="streak-label">계속 공부하세요!</div>
         <div class="streak-dots" id="streakDots"></div>
       </div>
     </div>
@@ -1990,7 +1990,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   function cmdShortcuts() { toggleShortcuts(); }
 
   /* ══════════════════════════════════════════
-     FEATURES — Bookmarks
+     FEATURES — 북마크
      ══════════════════════════════════════════ */
   function toggleBookmark(idx) {
     if (!store.bookmarks) store.bookmarks = [];
@@ -2006,7 +2006,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     renderChat();
   }
 
-  function renderBookmarks() {
+  function render북마크() {
     var list = $('bookmarksList');
     if (!list) return;
     var convo = getActive();
@@ -2118,7 +2118,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   }
 
   /* ══════════════════════════════════════════
-     FEATURES — Mind Map (SVG, auto-width nodes)
+     FEATURES — 마인드맵 (SVG, auto-width nodes)
      ══════════════════════════════════════════ */
   var mmZoom = 1;
   var mmPanX = 0, mmPanY = 0;
@@ -2301,7 +2301,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   }
 
   /* ══════════════════════════════════════════
-     FEATURES — Focus mode
+     FEATURES — 집중 모드
      ══════════════════════════════════════════ */
   function toggleFocus() {
     focusMode = !focusMode;
@@ -2471,7 +2471,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   }
 
   /* ══════════════════════════════════════════
-     MIND MAP — Export PNG
+     MIND MAP — PNG 내보내기
      ══════════════════════════════════════════ */
   function exportMindmapPng() {
     var svg = $('mindmapSvg');
@@ -2714,7 +2714,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     var bookmarksBtn = $('bookmarksBtn');
     if (bookmarksBtn) bookmarksBtn.addEventListener('click', function() {
       var overlay = $('bookmarksOverlay');
-      if (overlay) { overlay.classList.add('show'); renderBookmarks(); }
+      if (overlay) { overlay.classList.add('show'); render북마크(); }
     });
 
     /* ── Overlay close buttons ── */
@@ -2790,7 +2790,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       if (e.target === notesOverlayEl) closeNotes();
     });
 
-    /* ── Bookmarks overlay close on backdrop ── */
+    /* ── 북마크 overlay close on backdrop ── */
     var bookmarksOverlayEl = $('bookmarksOverlay');
     if (bookmarksOverlayEl) bookmarksOverlayEl.addEventListener('click', function(e) {
       if (e.target === bookmarksOverlayEl) bookmarksOverlayEl.classList.remove('show');
@@ -2802,7 +2802,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       if (e.target === shortcutsOverlayEl) shortcutsOverlayEl.classList.remove('show');
     });
 
-    /* ── Bookmarks list (event delegation) ── */
+    /* ── 북마크 list (event delegation) ── */
     var bookmarksList = $('bookmarksList');
     if (bookmarksList) bookmarksList.addEventListener('click', function(e) {
       var item = e.target.closest('.bookmark-item');
@@ -2858,7 +2858,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
         return;
       }
 
-      /* Alt+Z — Focus mode */
+      /* Alt+Z — 집중 모드 */
       if (e.altKey && e.key === 'z') {
         e.preventDefault();
         toggleFocus();
@@ -2889,7 +2889,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
         return;
       }
 
-      /* Ctrl+. — Quick notes */
+      /* Ctrl+. — 빠른 메모 */
       if ((e.ctrlKey || e.metaKey) && e.key === '.') {
         e.preventDefault();
         var notesOl = $('notesOverlay');

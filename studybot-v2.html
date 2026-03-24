@@ -191,6 +191,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 .chat-input::placeholder{color:var(--text2)}
 .send-btn{width:42px;height:42px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .send-btn:hover{background:#2563eb}
+.voice-btn{width:42px;height:42px;border-radius:var(--radius);border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.voice-btn:hover{border-color:var(--accent);color:var(--accent)}
+.voice-btn.recording{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red);animation:typPulse 1s infinite}
 .send-btn:disabled{background:var(--border);cursor:not-allowed;opacity:.4}
 .send-btn svg{width:18px;height:18px;fill:#fff}
 .input-hint{font-size:.65rem;color:var(--text2);margin-top:4px;text-align:center}
@@ -367,6 +370,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
       <div class="suggest-bar" id="suggestBar"></div>
       <div class="input-row">
         <textarea class="chat-input" id="chatInput" rows="1" placeholder="문서에 대해 질문하세요... ( / 명령어)"></textarea>
+        <button class="voice-btn" id="voiceBtn" type="button" aria-label="음성 입력" title="음성 입력">&#127908;</button>
         <button class="send-btn" id="sendBtn" disabled aria-label="전송">
           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
@@ -727,6 +731,15 @@ handle.addEventListener('mousedown',function(e){e.preventDefault();dragging=true
 document.addEventListener('mousemove',function(e){if(!dragging)return;var w=startW-(e.clientX-startX);w=Math.max(220,Math.min(w,window.innerWidth*0.5));panel.style.width=w+'px';renderMindmap()});
 document.addEventListener('mouseup',function(){if(!dragging)return;dragging=false;handle.classList.remove('active');document.body.style.cursor='';document.body.style.userSelect=''});
 handle.addEventListener('dblclick',function(){panel.style.width='';renderMindmap()})
+})();
+// ══════ VOICE INPUT ══════
+(function(){var vb=$('voiceBtn');if(!vb)return;var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){vb.style.display='none';return}
+var rec=new SR();rec.lang='ko-KR';rec.interimResults=true;rec.continuous=false;var recording=false;
+vb.addEventListener('click',function(){if(recording){rec.stop();return}recording=true;vb.classList.add('recording');vb.textContent='\u23F9';rec.start();showToast('\uD83C\uDF99 음성 인식 중...','info')});
+rec.onresult=function(e){var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;$('chatInput').value=t;$('sendBtn').disabled=!t.trim()};
+rec.onend=function(){recording=false;vb.classList.remove('recording');vb.textContent='\uD83C\uDF99';var t=$('chatInput').value.trim();if(t)showToast('\u2705 음성 입력 완료','success')};
+rec.onerror=function(e){recording=false;vb.classList.remove('recording');vb.textContent='\uD83C\uDF99';if(e.error!=='aborted')showToast('\u26A0 음성 인식 실패: '+e.error,'warn')}
 })();
 // ══════ SEARCH (Ctrl+K) ══════
 (function(){

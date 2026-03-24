@@ -118,6 +118,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 .msg-body{flex:1;min-width:0}
 .msg-head{font-size:.7rem;font-weight:600;color:var(--text2);margin-bottom:3px;display:flex;align-items:center;gap:6px}
 .msg-head .msg-time{font-weight:400;opacity:.6}
+.msg-edit-btn{border:none;background:none;color:var(--text2);cursor:pointer;font-size:.7rem;opacity:0;transition:opacity .15s;padding:0 2px}
+.msg:hover .msg-edit-btn{opacity:.6}
+.msg-edit-btn:hover{opacity:1!important;color:var(--accent)}
 .msg-text{font-size:.88rem;line-height:1.7}
 .msg-text strong{color:var(--accent);font-weight:700}
 .msg-text table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.8rem}
@@ -532,7 +535,7 @@ function cancelStream(){if(streamCancel){streamCancel();streamCancel=null}}
 
 // ══════ ADD MESSAGES ══════
 function showChat(){$('welcomeScreen').style.display='none';$('msgsArea').classList.add('active')}
-function addUser(t){showChat();var d=document.createElement('div');d.className='msg user';d.innerHTML='<div class="msg-av">\uD83D\uDC64</div><div class="msg-body"><div class="msg-head">나 <span class="msg-time">'+ts()+'</span></div><div class="msg-text"></div></div>';d.querySelector('.msg-text').textContent=t;$('msgsInner').appendChild(d);scrollMsg();pushMsg('u',t)}
+function addUser(t){showChat();var d=document.createElement('div');d.className='msg user';d.innerHTML='<div class="msg-av">\uD83D\uDC64</div><div class="msg-body"><div class="msg-head">나 <span class="msg-time">'+ts()+'</span> <button class="msg-edit-btn" type="button" title="수정">\u270E</button></div><div class="msg-text"></div></div>';var mt=d.querySelector('.msg-text');mt.textContent=t;d.querySelector('.msg-edit-btn').addEventListener('click',function(){if(busy)return;var ta=document.createElement('textarea');ta.className='chat-input';ta.value=t;ta.style.cssText='margin-top:6px;font-size:.85rem;min-height:36px';mt.textContent='';mt.appendChild(ta);ta.focus();ta.select();function submit(){var nt=ta.value.trim();if(!nt)return;var c=getActive();if(!c)return;var idx=-1;for(var i=0;i<c.msgs.length;i++){if(c.msgs[i].r==='u'&&c.msgs[i].t===t){idx=i;break}}if(idx>=0){c.msgs.length=idx;saveStore();loadMsgs();handle(nt)}}ta.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit()}if(e.key==='Escape'){mt.textContent=t}})});$('msgsInner').appendChild(d);scrollMsg();pushMsg('u',t)}
 function addBot(t,s,c,doStream,conf){
   showChat();var d=document.createElement('div');d.className='msg bot';
   var body=document.createElement('div');body.className='msg-body';

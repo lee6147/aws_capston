@@ -610,6 +610,8 @@ input, textarea { font-family: inherit; color: inherit; }
 .send-btn:hover { background: var(--accent-hover); transform: scale(1.05); }
 .send-btn:disabled { opacity: .4; transform: none; cursor: default; }
 .send-btn svg { width: 20px; height: 20px; fill: #fff; }
+.input-status { display: flex; gap: 12px; padding: 4px 8px; font-size: 11px; color: var(--text-tertiary); }
+.input-status kbd { padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); background: var(--bg-elevated); font-family: inherit; font-size: 10px; }
 
 /* Slash autocomplete */
 .slash-menu {
@@ -1267,6 +1269,12 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
           <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
         </button>
       </div>
+      <div class="input-status" id="inputStatus">
+        <span><kbd>/</kbd> 명령어</span>
+        <span><kbd>Enter</kbd> 전송</span>
+        <span><kbd>Ctrl+K</kbd> 검색</span>
+        <span id="wordCountDisplay"></span>
+      </div>
     </div>
   </main>
 </div>
@@ -1759,6 +1767,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     }
     saveStore();
     renderConvos();
+    var wcd=$('wordCountDisplay');if(wcd){var wc=convo.msgs.reduce(function(a,m){return a+(m.text||'').replace(/<[^>]+>/g,'').split(/\s+/).filter(function(w){return w}).length},0);wcd.textContent=wc+' 단어'}
   }
 
   function addUser(text) {

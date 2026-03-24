@@ -325,6 +325,8 @@ input, textarea { font-family: inherit; color: inherit; }
 }
 
 /* Messages area */
+.scroll-progress { height: 2px; background: var(--bg-elevated); flex-shrink: 0; }
+.scroll-progress::after { content: ''; display: block; height: 100%; width: var(--sp, 0%); background: var(--accent); transition: width .15s; border-radius: 0 1px 1px 0; }
 .messages {
   flex: 1;
   overflow-y: auto;
@@ -1233,6 +1235,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       </button>
     </div>
 
+    <div class="scroll-progress" id="scrollProgress"></div>
     <div class="messages" id="messages">
       <div class="messages-inner" id="messagesInner"></div>
       <div class="typing-indicator" id="typingIndicator">
@@ -2929,6 +2932,10 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
         return;
       }
     });
+
+    /* Scroll progress bar */
+    var msgEl = $('messages'), spEl = $('scrollProgress');
+    if (msgEl && spEl) { msgEl.addEventListener('scroll', function() { var pct = msgEl.scrollHeight <= msgEl.clientHeight ? 100 : Math.round(msgEl.scrollTop / (msgEl.scrollHeight - msgEl.clientHeight) * 100); spEl.style.setProperty('--sp', pct + '%'); }); }
 
     /* Focus chat input on load (desktop) */
     if (window.innerWidth > 768) {

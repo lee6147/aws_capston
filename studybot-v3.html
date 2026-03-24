@@ -629,7 +629,7 @@ function renderAll(){
   renderDomainBar();renderConvos();renderSuggestions();renderBookmarks();
   var c=getActive();
   if(c&&c.msgs.length>0){renderDocs();$('welcomeScreen').style.display='none';$('msgArea').style.display='block';}
-  else{renderWelcome();$('welcomeScreen').style.display='flex';$('msgArea').style.display='none';}
+  else{renderWelcome();var ws=$('welcomeScreen');if(ws)ws.style.display='flex';var ma=$('msgArea');if(ma)ma.style.display='none';}
   renderMindmap();updateTopbar();updateStreak();
 }
 
@@ -872,7 +872,7 @@ function addUser(text){
   if(!getActive())newConvo();
   pushMsg('user','<p>'+escHtml(text)+'</p>');
   var el=$('msgArea');if(!el)return;
-  $('welcomeScreen').style.display='none';el.style.display='block';
+  var ws=$('welcomeScreen');if(ws)ws.style.display='none';el.style.display='block';
   var c=getActive();
   el.insertAdjacentHTML('beforeend',buildMsg(c.msgs[c.msgs.length-1],c.msgs.length-1));
   scrollToBottom();renderConvos();

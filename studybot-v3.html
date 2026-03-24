@@ -1570,20 +1570,21 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       list.forEach(function(id) {
         var c = store.convos[id];
         var pinHtml = c.pinned ? '<span class="convo-pin" title="고정됨">\uD83D\uDCCC</span>' : '';
-        html += '<div class="convo-item' + (id === activeId ? ' active' : '') + '" data-id="' + id + '">' +
+        var lastMsg = c.msgs && c.msgs.length ? (c.msgs[c.msgs.length-1].text||'').replace(/<[^>]+>/g,'').slice(0,60) : '';
+        html += '<div class="convo-item' + (id === activeId ? ' active' : '') + '" data-id="' + id + '" title="' + escHtml(lastMsg) + '">' +
           '<span class="convo-icon">' + (domains[c.domain] ? domains[c.domain].icon : '\uD83D\uDCAC') + '</span>' +
           '<span class="convo-title">' + escHtml(c.title || '새 대화') + '</span>' +
           pinHtml +
           '<div class="convo-actions">' +
-            '<button class="convo-action-btn" data-action="pin" data-id="' + id + '" title="' + (c.pinned ? 'Unpin' : 'Pin') + '">\uD83D\uDCCC</button>' +
+            '<button class="convo-action-btn" data-action="pin" data-id="' + id + '" title="' + (c.pinned ? '고정 해제' : '고정') + '">\uD83D\uDCCC</button>' +
             '<button class="convo-action-btn" data-action="delete" data-id="' + id + '" title="삭제">\u2715</button>' +
           '</div></div>';
       });
     }
-    addGroup('Today', groups.today);
-    addGroup('Yesterday', groups.yesterday);
-    addGroup('This Week', groups.week);
-    addGroup('Older', groups.older);
+    addGroup('오늘', groups.today);
+    addGroup('어제', groups.yesterday);
+    addGroup('이번 주', groups.week);
+    addGroup('이전', groups.older);
     el.innerHTML = html;
   }
 

@@ -144,6 +144,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 .msg-src.expanded .msg-src-text{white-space:normal;overflow:visible}
 /* Confidence */
 .msg-confidence{display:inline-flex;align-items:center;gap:4px;font-size:.65rem;color:var(--text2);margin-left:8px}
+.msg-readtime{font-size:.6rem;color:var(--text2);margin-left:8px;opacity:.5;font-weight:400}
 .conf-dot{width:6px;height:6px;border-radius:50%}
 .conf-high{background:var(--green)}
 .conf-med{background:var(--orange)}
@@ -576,7 +577,8 @@ function addBot(t,s,c,doStream,conf){
   showChat();var d=document.createElement('div');d.className='msg bot';
   var body=document.createElement('div');body.className='msg-body';
   var confTag=conf>0?'<span class="msg-confidence"><span class="conf-dot '+(conf>80?'conf-high':conf>50?'conf-med':'conf-low')+'"></span>'+conf+'%</span>':'';
-  body.innerHTML='<div class="msg-head">StudyBot <span class="msg-time">'+ts()+'</span>'+confTag+'</div>';
+  var plainLen=t.replace(/<[^>]+>/g,'').length;var readMin=Math.max(1,Math.ceil(plainLen/500));var readTag=plainLen>100?'<span class="msg-readtime">\u23F1 '+readMin+'분 읽기</span>':'';
+  body.innerHTML='<div class="msg-head">StudyBot <span class="msg-time">'+ts()+'</span>'+confTag+readTag+'</div>';
   var txt=document.createElement('div');txt.className='msg-text';body.appendChild(txt);
   d.innerHTML='<div class="msg-av">\uD83E\uDD16</div>';d.appendChild(body);$('msgsInner').appendChild(d);
   setConf(conf||0);

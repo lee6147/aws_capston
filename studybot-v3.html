@@ -996,7 +996,7 @@ function handle(text){
     }else{
       addBot(guardResponse.replace(domainMeta[curDomain].name,domainMeta[curDomain].name),null,null,true,0);
     }
-    busy=false;updateStreak();
+    busy=false;updateStreak();checkAchievements();
   },800+Math.random()*400);
 }
 
@@ -1200,6 +1200,29 @@ function updateStreakDay(){
   }
 }
 
+// Confetti
+function showConfetti(){
+  var cv=document.createElement('canvas');cv.style.cssText='position:fixed;inset:0;z-index:999;pointer-events:none';
+  cv.width=window.innerWidth;cv.height=window.innerHeight;document.body.appendChild(cv);
+  var ctx=cv.getContext('2d'),ps=[];
+  for(var i=0;i<80;i++)ps.push({x:cv.width/2,y:cv.height/2,vx:(Math.random()-.5)*12,vy:Math.random()*-12-4,c:['#3b82f6','#8b5cf6','#22c55e','#f59e0b','#ef4444'][i%5],s:Math.random()*6+3,l:1});
+  (function go(){ctx.clearRect(0,0,cv.width,cv.height);var alive=false;ps.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.3;p.l-=.015;if(p.l>0){alive=true;ctx.globalAlpha=p.l;ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,p.s,p.s)}});if(alive)requestAnimationFrame(go);else cv.remove()})()
+}
+
+// Achievement System
+var achvState=JSON.parse(localStorage.getItem('sb3_achv')||'{}');
+function checkAchievements(){
+  var c=getActive();if(!c)return;
+  var totalQ=0,domUsed={};convos.forEach(function(cv){cv.msgs.forEach(function(m){if(m.r==='u')totalQ++});domUsed[cv.domain||'bio']=true});
+  var pins=convos.filter(function(cv){return cv.pinned}).length;
+  var checks=[
+    {id:'first',ok:totalQ>=1},{id:'streak5',ok:totalQ>=5},
+    {id:'explorer',ok:Object.keys(domUsed).length>=6},{id:'reader20',ok:totalQ>=20},
+    {id:'pinner3',ok:pins>=3}
+  ];
+  checks.forEach(function(ch){if(ch.ok&&!achvState[ch.id]){achvState[ch.id]=true;localStorage.setItem('sb3_achv',JSON.stringify(achvState));var def=achvDefs.find(function(a){return a.id===ch.id});if(def){showConfetti();showToast('🏆 업적 달성: '+def.icon+' '+def.name,'success')}}})
+}
+
 /* ═══════════════════════════════════════════
    KEYBOARD SHORTCUTS
    ═══════════════════════════════════════════ */
@@ -1225,6 +1248,10 @@ document.addEventListener('keydown',function(e){
    ═══════════════════════════════════════════ */
 loadStore();
 updateStreakDay();
+// Time greeting + daily tip
+(function(){var h=new Date().getHours();var gr=h<6?'🌙 밤늦게 공부하는 당신, 멋져요!':h<12?'☀️ 좋은 아침이에요!':h<18?'🌤 좋은 오후예요!':'🌙 좋은 저녁이에요!';
+var tips=['💡 포모도로: 25분 집중 + 5분 휴식','💡 남에게 설명하면 기억률 90%','💡 /mindmap으로 시각 정리 = 이해력 2배','💡 수면 전 복습 → 장기기억 전환','💡 퀴즈 풀기 = 학습 효과 50% UP','💡 손글씨 > 디지털 (기억력 29%↑)'];
+var ws=$('welcomeScreen');if(ws){var gt=ws.querySelector('h2');if(gt)gt.textContent=gr+' StudyBot입니다';var sub=ws.querySelector('.welcome-tip');if(!sub){sub=document.createElement('div');sub.className='welcome-tip';sub.style.cssText='font-size:var(--text-sm);color:var(--cyan);margin:var(--space-3) 0;font-style:italic';ws.insertBefore(sub,ws.children[3]||null)}sub.textContent=tips[new Date().getDate()%tips.length]}})();
 if(!convos.length)newConvo();
 renderAll();
 

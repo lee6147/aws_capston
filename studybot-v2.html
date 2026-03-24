@@ -354,9 +354,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
     <div id="docList"></div>
     <button class="upload-btn" id="uploadBtn">&#128206; PDF 업로드 체험</button>
   </div>
-  <div class="panel-left-footer">
-    &#9889; 문서 기반 AI — ChatGPT와 다릅니다<br>
-    <span style="font-size:.6rem">Bedrock KB + S3 Vectors + Claude 3 Haiku</span>
+  <div class="panel-left-footer" id="streakFooter">
+    <div id="streakDisplay" style="margin-bottom:4px"></div>
+    <span style="font-size:.6rem;opacity:.5">Bedrock KB + S3 + Claude 3 Haiku</span>
   </div>
 </aside>
 
@@ -851,6 +851,13 @@ loadStore();if(!localStorage.getItem(STORE)&&window.matchMedia&&window.matchMedi
 (function(){var h=new Date().getHours();var gr=h<6?'\uD83C\uDF19 \uBC24\uB2A6\uAC8C \uACF5\uBD80\uD558\uB294 \uB2F9\uC2E0, \uBA4B\uC838\uC694!':h<12?'\u2600\uFE0F \uC88B\uC740 \uC544\uCE68\uC774\uC5D0\uC694!':h<18?'\uD83C\uDF24 \uC88B\uC740 \uC624\uD6C4\uC608\uC694!':'\uD83C\uDF19 \uC88B\uC740 \uC800\uB141\uC774\uC5D0\uC694!';var wg=$('welcomeGreeting');if(wg)wg.textContent=gr+' StudyBot\uC785\uB2C8\uB2E4';
 var tips=['\uD83D\uDCA1 Tip: \uD3EC\uBAA8\uB3C4\uB85C \uAE30\uBC95\uC73C\uB85C 25\uBD84 \uC9D1\uC911 + 5\uBD84 \uD734\uC2DD\uC744 \uBC18\uBCF5\uD574\uBCF4\uC138\uC694','\uD83D\uDCA1 Tip: \uBC30\uC6B4 \uB0B4\uC6A9\uC744 \uB0A8\uC5D0\uAC8C \uC124\uBA85\uD558\uBA74 \uAE30\uC5B5\uB960\uC774 90%\uAE4C\uC9C0 \uC62C\uB77C\uAC11\uB2C8\uB2E4','\uD83D\uDCA1 Tip: /mindmap\uC73C\uB85C \uC2DC\uAC01\uC801\uC73C\uB85C \uC815\uB9AC\uD558\uBA74 \uC774\uD574\uB825\uC774 2\uBC30!','\uD83D\uDCA1 Tip: \uC190\uC73C\uB85C \uC4F0\uBA70 \uACF5\uBD80\uD558\uBA74 \uB514\uC9C0\uD138\uBCF4\uB2E4 \uAE30\uC5B5\uB825 29% \uD5A5\uC0C1','\uD83D\uDCA1 Tip: \uC218\uBA74 \uC804 \uBCF5\uC2B5\uD558\uBA74 \uC7A5\uAE30\uAE30\uC5B5\uC73C\uB85C \uC804\uD658\uB429\uB2C8\uB2E4','\uD83D\uDCA1 Tip: \uD038\uC988(\uD83D\uDCDD)\uB97C \uD480\uBA74 \uB2E8\uC21C \uC77D\uAE30\uBCF4\uB2E4 \uD559\uC2B5 \uD6A8\uACFC 50% UP'];
 var dt=$('dailyTip');if(dt)dt.textContent=tips[new Date().getDate()%tips.length]})();
+// Study streak tracker
+(function(){var sk='studybot_streak',today=new Date().toISOString().slice(0,10);
+var data=JSON.parse(localStorage.getItem(sk)||'{"days":[],"lastDay":""}');
+if(data.lastDay!==today){data.days.push(today);if(data.days.length>60)data.days=data.days.slice(-60);data.lastDay=today;localStorage.setItem(sk,JSON.stringify(data))}
+var streak=1;for(var i=data.days.length-2;i>=0;i--){var d1=new Date(data.days[i+1]),d0=new Date(data.days[i]);if((d1-d0)/(864e5)<=1)streak++;else break}
+var sd=$('streakDisplay');if(sd){var fire=streak>=7?'\uD83D\uDD25':streak>=3?'\u2B50':'\uD83D\uDCDA';sd.innerHTML=fire+' <strong>'+streak+'일</strong> 연속 학습'+(streak>=7?' \uD83C\uDF89':'')+' &middot; 오늘 '+convos.reduce(function(a,c){return a+c.msgs.filter(function(m){return m.r==='u'}).length},0)+'개 질문'}
+})();
 var initC=getActive();if(initC&&initC.msgs.length){curDomain=initC.domain||'bio';loadMsgs()}
 $('topTitle').textContent=domains[curDomain].name;
 

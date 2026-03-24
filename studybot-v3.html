@@ -1883,7 +1883,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     if (found) {
       found.fn(arg);
     } else {
-      showToast('Unknown command: ' + cmd, 'warning');
+      showToast('알 수 없는 명령어: ' + cmd, 'warning');
     }
   }
 
@@ -1899,14 +1899,14 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     var convo = getActive();
     if (convo) { convo.msgs = []; convo.updated = Date.now(); saveStore(); }
     renderChat();
-    showToast('Conversation cleared', 'success');
+    showToast('대화가 초기화되었습니다', 'success');
   }
   function cmdNew() {
     activeId = null;
     ensureConvo();
     renderChat();
     renderConvos();
-    showToast('New conversation started', 'success');
+    showToast('새 대화가 시작되었습니다', 'success');
   }
   function cmdDomain(arg) {
     var key = arg.trim().toLowerCase();
@@ -1917,16 +1917,16 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       updateTopbar();
       renderChat();
       renderSuggestions();
-      showToast('Switched to ' + domains[key].name, 'success');
+      showToast(domains[key].icon + ' ' + domains[key].name + ' 전환됨', 'success');
     } else {
-      showToast('Available domains: ' + Object.keys(domains).join(', '), 'warning');
+      showToast('사용 가능: ' + Object.keys(domains).map(function(k){return domains[k].icon}).join(' '), 'warning');
     }
   }
   function cmdMindmap() { openMindmap(); }
   function cmdSummary() {
     var convo = getActive();
     if (!convo || !convo.msgs || convo.msgs.length === 0) {
-      showToast('No messages to summarize', 'warning');
+      showToast('요약할 메시지가 없습니다', 'warning');
       return;
     }
     var count = convo.msgs.length;
@@ -1947,7 +1947,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     if (lastBot >= 0) {
       toggleBookmark(lastBot);
     } else {
-      showToast('No bot message to bookmark', 'warning');
+      showToast('북마크할 메시지가 없습니다', 'warning');
     }
   }
   function cmdNotes() { openNotes(); }
@@ -1970,7 +1970,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   }
   function cmdExport() {
     var convo = getActive();
-    if (!convo || !convo.msgs || convo.msgs.length === 0) { showToast('Nothing to export', 'warning'); return; }
+    if (!convo || !convo.msgs || convo.msgs.length === 0) { showToast('내보낼 대화가 없습니다', 'warning'); return; }
     var text = 'StudyBot Conversation Export\nDomain: ' + (domains[convo.domain] ? domains[convo.domain].name : '') + '\n\n';
     convo.msgs.forEach(function(m) {
       text += (m.role === 'user' ? 'You' : 'Bot') + ' [' + (m.time || '') + ']: ' + m.text + '\n\n';
@@ -1980,7 +1980,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     a.href = URL.createObjectURL(blob);
     a.download = 'studybot-export.txt';
     a.click();
-    showToast('Conversation exported', 'success');
+    showToast('대화가 내보내졌습니다', 'success');
   }
   function cmdVoice() { toggleVoice(); }
   function cmdShortcuts() { toggleShortcuts(); }
@@ -1993,10 +1993,10 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     var pos = store.bookmarks.indexOf(idx);
     if (pos !== -1) {
       store.bookmarks.splice(pos, 1);
-      showToast('Bookmark removed', 'info');
+      showToast('북마크 삭제됨', 'info');
     } else {
       store.bookmarks.push(idx);
-      showToast('Bookmarked!', 'success');
+      showToast('북마크에 저장됨!', 'success');
     }
     saveStore();
     renderChat();
@@ -2068,7 +2068,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
   function toggleVoice() {
     var btn = $('voiceBtn');
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      showToast('Speech recognition not supported in this browser', 'error');
+      showToast('이 브라우저에서 음성 인식을 지원하지 않습니다', 'error');
       return;
     }
     if (recording) {
@@ -2092,7 +2092,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     recognition.onerror = function() {
       recording = false;
       if (btn) btn.classList.remove('recording');
-      showToast('Voice recognition failed', 'error');
+      showToast('음성 인식 실패', 'error');
     };
     recognition.onend = function() {
       recording = false;
@@ -2101,7 +2101,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     recognition.start();
     recording = true;
     if (btn) btn.classList.add('recording');
-    showToast('Listening... speak now', 'info');
+    showToast('🎙 듣고 있습니다... 말씀하세요', 'info');
   }
 
   function speakText(text) {
@@ -2293,7 +2293,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     theme = themes[(idx + 1) % themes.length];
     document.documentElement.setAttribute('data-theme', theme);
     saveStore();
-    showToast('Theme: ' + theme, 'success');
+    showToast('테마: ' + (theme==='dark'?'다크':theme==='light'?'라이트':'고대비'), 'success');
   }
 
   /* ══════════════════════════════════════════
@@ -2303,7 +2303,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     focusMode = !focusMode;
     var app = $('app');
     if (app) app.classList.toggle('focus-mode', focusMode);
-    showToast(focusMode ? 'Focus mode on' : 'Focus mode off', 'info');
+    showToast(focusMode ? '🎯 집중 모드 ON' : '🎯 집중 모드 OFF', 'info');
   }
 
   /* ══════════════════════════════════════════
@@ -2486,7 +2486,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
       a.download = 'mindmap-' + curDomain + '.png';
       a.href = canvas.toDataURL('image/png');
       a.click();
-      showToast('Mind map exported as PNG', 'success');
+      showToast('마인드맵 PNG 다운로드 완료', 'success');
     };
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
   }
@@ -2631,7 +2631,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
         } else if (action === 'copy') {
           var msg = convo.msgs[msgIdx];
           if (msg && navigator.clipboard) {
-            navigator.clipboard.writeText(msg.text).then(function() { showToast('Copied to clipboard', 'success'); });
+            navigator.clipboard.writeText(msg.text).then(function() { showToast('클립보드에 복사됨', 'success'); });
           }
         } else if (action === 'read') {
           var msg = convo.msgs[msgIdx];
@@ -2678,7 +2678,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     var ttsToggleBtn = $('ttsToggle');
     if (ttsToggleBtn) ttsToggleBtn.addEventListener('click', function() {
       ttsEnabled = !ttsEnabled;
-      showToast(ttsEnabled ? 'TTS enabled' : 'TTS disabled', 'info');
+      showToast(ttsEnabled ? '🔊 읽어주기 ON' : '🔊 읽어주기 OFF', 'info');
     });
 
     var focusBtnEl = $('focusBtn');
@@ -2873,7 +2873,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
           updateTopbar();
           renderChat();
           renderSuggestions();
-          showToast('Switched to ' + domains[curDomain].name, 'success');
+          showToast(domains[curDomain].icon + ' ' + domains[curDomain].name + ' 전환됨', 'success');
         }
         return;
       }

@@ -1039,6 +1039,8 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     box-shadow: var(--shadow-lg);
   }
   .sidebar.open { transform: translateX(0); }
+  .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 39; }
+  .sidebar-backdrop.show { display: block; }
   .topbar-hamburger { display: flex; }
   .messages { padding: 16px; }
   .msg { max-width: 92%; }
@@ -1161,6 +1163,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
 <!-- ══════ MAIN APP ══════ -->
 <div class="app" id="app">
 
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
   <!-- ── SIDEBAR ── -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -2945,6 +2948,11 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     /* Scroll progress bar */
     var msgEl = $('messages'), spEl = $('scrollProgress');
     if (msgEl && spEl) { msgEl.addEventListener('scroll', function() { var pct = msgEl.scrollHeight <= msgEl.clientHeight ? 100 : Math.round(msgEl.scrollTop / (msgEl.scrollHeight - msgEl.clientHeight) * 100); spEl.style.setProperty('--sp', pct + '%'); }); }
+
+    /* Mobile sidebar toggle */
+    var hbBtn=$('hamburgerBtn'),sbEl=$('sidebar'),sbBd=$('sidebarBackdrop');
+    if(hbBtn&&sbEl){hbBtn.addEventListener('click',function(){sbEl.classList.toggle('open');if(sbBd)sbBd.classList.toggle('show')})}
+    window.closeSidebar=function(){if(sbEl)sbEl.classList.remove('open');if(sbBd)sbBd.classList.remove('show')};
 
     /* Focus chat input on load (desktop) */
     if (window.innerWidth > 768) {

@@ -546,10 +546,10 @@ function pushMsg(r,t){var c=getActive();if(!c)return;c.msgs.push({r:r,t:t,ts:ts(
 function renderConvos(){
   var el=$('convoList');
   var sorted=convos.slice().sort(function(a,b){return (b.pinned?1:0)-(a.pinned?1:0)});
-  el.innerHTML=sorted.map(function(c){
-    var d=domains[c.domain||'bio'];
-    return '<div class="conv-item'+(c.id===activeId?' active':'')+(c.pinned?' pinned':'')+'" data-id="'+c.id+'" role="button" tabindex="0"><span style="opacity:.5">'+((d&&d.icon)||'\uD83D\uDCAC')+'</span><span class="conv-title">'+escHtml(c.title)+'</span><button class="conv-pin" type="button" aria-label="고정" data-pin="'+c.id+'">'+(c.pinned?'\u2B50':'\u2606')+'</button><button class="conv-del" type="button" aria-label="대화 삭제" data-del="'+c.id+'">\u2715</button></div>'
-  }).join('')||'<div style="padding:16px;text-align:center;font-size:.75rem;color:var(--text2)">대화가 없습니다</div>';
+  var now=Date.now(),day=864e5,groups={'\u2B50 고정':[],'오늘':[],'어제':[],'이번 주':[],'이전':[]};
+  sorted.forEach(function(c){var age=now-(c.ts||now);if(c.pinned)groups['\u2B50 고정'].push(c);else if(age<day)groups['오늘'].push(c);else if(age<2*day)groups['어제'].push(c);else if(age<7*day)groups['이번 주'].push(c);else groups['이전'].push(c)});
+  var html='';Object.keys(groups).forEach(function(g){if(!groups[g].length)return;html+='<div class="conv-section" style="padding:8px 16px 2px;font-size:.6rem">'+g+'</div>';groups[g].forEach(function(c){var d=domains[c.domain||'bio'];html+='<div class="conv-item'+(c.id===activeId?' active':'')+(c.pinned?' pinned':'')+'" data-id="'+c.id+'" role="button" tabindex="0"><span style="opacity:.5">'+((d&&d.icon)||'\uD83D\uDCAC')+'</span><span class="conv-title">'+escHtml(c.title)+'</span><button class="conv-pin" type="button" aria-label="고정" data-pin="'+c.id+'">'+(c.pinned?'\u2B50':'\u2606')+'</button><button class="conv-del" type="button" aria-label="대화 삭제" data-del="'+c.id+'">\u2715</button></div>'})});
+  el.innerHTML=html||'<div style="padding:16px;text-align:center;font-size:.75rem;color:var(--text2)">대화가 없습니다</div>';
   el.querySelectorAll('.conv-item').forEach(function(i){i.addEventListener('click',function(e){if(!e.target.closest('.conv-del'))switchConvo(i.dataset.id)});i.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&!e.target.closest('.conv-del')){e.preventDefault();switchConvo(i.dataset.id)}})});
   el.querySelectorAll('.conv-pin').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();var c=convos.find(function(x){return x.id===b.dataset.pin});if(c){c.pinned=!c.pinned;saveStore();renderConvos()}})});
   el.querySelectorAll('.conv-del').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();deleteConvo(b.dataset.del)})});

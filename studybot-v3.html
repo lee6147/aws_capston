@@ -622,6 +622,11 @@ input, textarea { font-family: inherit; color: inherit; }
 }
 .send-btn:hover { background: var(--accent-hover); transform: scale(1.05); }
 .send-btn:disabled { opacity: .4; transform: none; cursor: default; }
+button:active:not(:disabled) { transform: scale(.96); }
+.msg-action-btn:active { transform: scale(.85); }
+.convo-item:active { transform: scale(.98); }
+.domain-chip:active { transform: scale(.95); }
+.welcome-sug:active { transform: scale(.97); }
 .send-btn svg { width: 20px; height: 20px; fill: #fff; }
 .input-status { display: flex; gap: 12px; padding: 4px 8px; font-size: 11px; color: var(--text-tertiary); }
 .input-status kbd { padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); background: var(--bg-elevated); font-family: inherit; font-size: 10px; }

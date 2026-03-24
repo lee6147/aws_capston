@@ -455,6 +455,13 @@ input, textarea { font-family: inherit; color: inherit; }
   transition: all .15s;
 }
 .msg-action-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.emoji-picker { position: absolute; bottom: 100%; right: 0; display: none; gap: 2px; padding: 6px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); z-index: 10; }
+.emoji-picker.show { display: flex; }
+.emoji-pick { width: 32px; height: 32px; border: none; background: none; border-radius: 8px; cursor: pointer; font-size: 18px; transition: all .15s; display: flex; align-items: center; justify-content: center; }
+.emoji-pick:hover { background: var(--bg-hover); transform: scale(1.2); }
+.msg-reactions { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.msg-reaction { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-elevated); font-size: 13px; cursor: pointer; transition: all .15s; }
+.msg-reaction:hover { border-color: var(--accent); }
 .msg-action-btn.bookmarked { color: var(--warning); }
 
 /* Sources */
@@ -1665,6 +1672,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
         (!isUser ? '<button class="msg-action-btn' + (isBookmarked ? ' bookmarked' : '') + '" data-action="bookmark" data-idx="' + idx + '" title="북마크">\uD83D\uDD16</button>' : '') +
         (!isUser ? '<button class="msg-action-btn" data-action="copy" data-idx="' + idx + '" title="복사">\uD83D\uDCCB</button>' : '') +
         (!isUser ? '<button class="msg-action-btn" data-action="read" data-idx="' + idx + '" title="읽어주기">\uD83D\uDD0A</button>' : '') +
+        (!isUser ? '<button class="msg-action-btn" data-action="react" data-idx="' + idx + '" title="리액션">😀</button>' : '') +
       '</div></div>';
 
     return '<div class="' + cls + '">' +
@@ -2942,6 +2950,33 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
         if (sbBd) sbBd.classList.remove('show');
         hideSlashMenu();
         return;
+      }
+    });
+
+    /* Message action delegation */
+    var msgsEl = $('messages');
+    if (msgsEl) msgsEl.addEventListener('click', function(e) {
+      var btn = e.target.closest('.msg-action-btn');
+      if (!btn) return;
+      var action = btn.dataset.action, idx = parseInt(btn.dataset.idx);
+      var convo = getActive(); if (!convo || !convo.msgs[idx]) return;
+      var msg = convo.msgs[idx];
+      if (action === 'copy') {
+        navigator.clipboard.writeText((msg.text||'').replace(/<[^>]+>/g,'')).then(function(){ showToast('클립보드에 복사됨','success'); });
+      } else if (action === 'bookmark') {
+        addBookmark((msg.text||'').replace(/<[^>]+>/g,'').slice(0,40)+'…', convo.id || activeId, idx);
+        btn.classList.toggle('bookmarked');
+      } else if (action === 'read') {
+        if(window.speechSynthesis){speechSynthesis.cancel();var u=new SpeechSynthesisUtterance((msg.text||'').replace(/<[^>]+>/g,''));u.lang='ko-KR';u.rate=.95;speechSynthesis.speak(u);showToast('🔊 읽기 시작','success')}
+      } else if (action === 'react') {
+        var picker = btn.parentElement.querySelector('.emoji-picker');
+        if (!picker) {
+          picker = document.createElement('div'); picker.className = 'emoji-picker';
+          ['👍','❤️','😂','🤔','👏','🔥'].forEach(function(em){ var b=document.createElement('button');b.className='emoji-pick';b.textContent=em;b.addEventListener('click',function(ev){ev.stopPropagation();picker.classList.remove('show');var rw=btn.closest('.msg').querySelector('.msg-reactions');if(!rw){rw=document.createElement('div');rw.className='msg-reactions';btn.closest('.msg-bubble').parentElement.appendChild(rw)}var ex=rw.querySelector('[data-em="'+em+'"]');if(ex){ex.remove();if(!rw.children.length)rw.remove()}else{var badge=document.createElement('span');badge.className='msg-reaction';badge.dataset.em=em;badge.textContent=em;badge.addEventListener('click',function(){badge.remove();if(rw&&!rw.children.length)rw.remove()});rw.appendChild(badge)}});picker.appendChild(b)});
+          btn.parentElement.style.position='relative';btn.parentElement.appendChild(picker);
+        }
+        picker.classList.toggle('show');
+        document.addEventListener('click',function closeP(ev){if(!picker.contains(ev.target)&&ev.target!==btn){picker.classList.remove('show');document.removeEventListener('click',closeP)}},{once:false});
       }
     });
 

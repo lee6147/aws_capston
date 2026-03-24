@@ -52,6 +52,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
 .conv-item:hover{background:rgba(59,130,246,0.08)}
 .conv-item.active{background:rgba(59,130,246,0.15);color:var(--accent)}
 .conv-title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-pin{display:none;width:20px;height:20px;border:none;background:none;color:var(--orange);cursor:pointer;font-size:.7rem;border-radius:4px;align-items:center;justify-content:center}
+.conv-item:hover .conv-pin,.conv-item.pinned .conv-pin{display:flex}
+.conv-item.pinned{border-left:2px solid var(--orange)}
 .conv-del{display:none;width:20px;height:20px;border:none;background:none;color:var(--red);cursor:pointer;font-size:.7rem;border-radius:4px;align-items:center;justify-content:center}
 .conv-item:hover .conv-del{display:flex}
 /* Documents */
@@ -380,6 +383,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,'Apple SD Gothic Neo','Malgu
       <div class="mm-input-btns">
         <button type="button" class="mm-btn mm-btn-primary" id="mmAnalyze">&#128269; 분석</button>
         <button type="button" class="mm-btn" id="mmReset">&#8617; 초기화</button>
+        <button type="button" class="mm-btn" id="mmExport">&#128247; PNG</button>
       </div>
     </div>
     <div class="mm-bm-section">
@@ -484,11 +488,13 @@ function pushMsg(r,t){var c=getActive();if(!c)return;c.msgs.push({r:r,t:t,ts:ts(
 // ══════ RENDER ══════
 function renderConvos(){
   var el=$('convoList');
-  el.innerHTML=convos.map(function(c){
+  var sorted=convos.slice().sort(function(a,b){return (b.pinned?1:0)-(a.pinned?1:0)});
+  el.innerHTML=sorted.map(function(c){
     var d=domains[c.domain||'bio'];
-    return '<div class="conv-item'+(c.id===activeId?' active':'')+'" data-id="'+c.id+'" role="button" tabindex="0"><span style="opacity:.5">'+((d&&d.icon)||'\uD83D\uDCAC')+'</span><span class="conv-title">'+escHtml(c.title)+'</span><button class="conv-del" type="button" aria-label="대화 삭제" data-del="'+c.id+'">\u2715</button></div>'
+    return '<div class="conv-item'+(c.id===activeId?' active':'')+(c.pinned?' pinned':'')+'" data-id="'+c.id+'" role="button" tabindex="0"><span style="opacity:.5">'+((d&&d.icon)||'\uD83D\uDCAC')+'</span><span class="conv-title">'+escHtml(c.title)+'</span><button class="conv-pin" type="button" aria-label="고정" data-pin="'+c.id+'">'+(c.pinned?'\u2B50':'\u2606')+'</button><button class="conv-del" type="button" aria-label="대화 삭제" data-del="'+c.id+'">\u2715</button></div>'
   }).join('')||'<div style="padding:16px;text-align:center;font-size:.75rem;color:var(--text2)">대화가 없습니다</div>';
   el.querySelectorAll('.conv-item').forEach(function(i){i.addEventListener('click',function(e){if(!e.target.closest('.conv-del'))switchConvo(i.dataset.id)});i.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&!e.target.closest('.conv-del')){e.preventDefault();switchConvo(i.dataset.id)}})});
+  el.querySelectorAll('.conv-pin').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();var c=convos.find(function(x){return x.id===b.dataset.pin});if(c){c.pinned=!c.pinned;saveStore();renderConvos()}})});
   el.querySelectorAll('.conv-del').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();deleteConvo(b.dataset.del)})});
 }
 function renderDocs(){
@@ -717,7 +723,7 @@ document.addEventListener('mouseup',function(){if(mmDragging){mmDragging=false;v
 })();
 
 // ══════ INIT ══════
-loadStore();setTheme(theme);renderConvos();renderDomainBar();renderDocs();renderWelcome();renderMindmap();renderSuggestions();
+loadStore();if(!localStorage.getItem(STORE)&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:light)').matches)theme='light';setTheme(theme);renderConvos();renderDomainBar();renderDocs();renderWelcome();renderMindmap();renderSuggestions();
 var initC=getActive();if(initC&&initC.msgs.length){curDomain=initC.domain||'bio';loadMsgs()}
 $('topTitle').textContent=domains[curDomain].name;
 
@@ -744,6 +750,15 @@ document.addEventListener('mousemove',function(e){if(!dragging)return;var w=star
 document.addEventListener('mouseup',function(){if(!dragging)return;dragging=false;handle.classList.remove('active');document.body.style.cursor='';document.body.style.userSelect=''});
 handle.addEventListener('dblclick',function(){panel.style.width='';renderMindmap()})
 })();
+// ══════ PNG EXPORT ══════
+$('mmExport').addEventListener('click',function(){
+  var svg=$('mmSvg');if(!svg)return;
+  var svgData=new XMLSerializer().serializeToString(svg);
+  var canvas=document.createElement('canvas');var ctx=canvas.getContext('2d');
+  var img=new Image();
+  img.onload=function(){canvas.width=img.width*2;canvas.height=img.height*2;ctx.scale(2,2);ctx.fillStyle='#0a0e1a';ctx.fillRect(0,0,img.width,img.height);ctx.drawImage(img,0,0);var a=document.createElement('a');a.download='studybot-mindmap.png';a.href=canvas.toDataURL('image/png');a.click();showToast('PNG 다운로드 완료','success')};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" width="'+svg.clientWidth+'" height="'+svg.clientHeight+'">'+svgData.replace(/<svg[^>]*>/,'').replace(/<\/svg>/,'')+'</svg>')
+});
 // ══════ VOICE INPUT ══════
 (function(){var vb=$('voiceBtn');if(!vb)return;var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 if(!SR){vb.style.display='none';return}

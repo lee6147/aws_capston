@@ -817,6 +817,16 @@ function renderSuggestions(){
   el.innerHTML=h;
 }
 
+function addBookmark(preview,convoId,msgIdx){
+  bookmarks.push({preview:preview,cid:convoId||activeId,idx:msgIdx||0});
+  if(bookmarks.length>30)bookmarks.shift();
+  saveStore();renderBookmarks();showToast('🔖 북마크 저장됨','success');
+}
+function jumpBookmark(i){
+  var b=bookmarks[i];if(!b)return;
+  if(b.cid&&b.cid!==activeId)switchConvo(b.cid);
+  setTimeout(function(){var msgs=document.querySelectorAll('.msg');if(msgs[b.idx]){msgs[b.idx].scrollIntoView({behavior:'smooth',block:'center'});msgs[b.idx].style.outline='2px solid var(--accent)';setTimeout(function(){msgs[b.idx].style.outline=''},2000)}},200);
+}
 function renderBookmarks(){
   var el=$('bookmarkList');if(!el)return;
   if(!bookmarks.length){el.innerHTML='<p style="font-size:var(--text-xs);color:var(--text-4)">북마크가 없습니다</p>';return;}
@@ -1119,8 +1129,7 @@ window.regenMsg=function(idx){
 window.bookmarkMsg=function(idx){
   var c=getActive();if(!c||!c.msgs[idx])return;
   var preview=c.msgs[idx].text.replace(/<[^>]*>/g,'').substring(0,40)+'…';
-  bookmarks.push({convoId:c.id,msgIdx:idx,preview:preview});
-  saveStore();renderBookmarks();showToast('북마크 추가됨','success');
+  addBookmark(preview,c.id,idx);
 };
 window.jumpBookmark=function(i){
   if(!bookmarks[i])return;

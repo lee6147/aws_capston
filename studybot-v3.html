@@ -1158,6 +1158,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     </div>
     <div class="shortcut-row"><span class="shortcut-label">검색</span><div class="shortcut-keys"><span class="shortcut-key">Ctrl</span><span class="shortcut-key">K</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">단축키 도움</span><div class="shortcut-keys"><span class="shortcut-key">Ctrl</span><span class="shortcut-key">/</span></div></div>
+    <div class="shortcut-row"><span class="shortcut-label">새 대화</span><div class="shortcut-keys"><span class="shortcut-key">Ctrl</span><span class="shortcut-key">N</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">집중 모드</span><div class="shortcut-keys"><span class="shortcut-key">Alt</span><span class="shortcut-key">Z</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">도메인 1-6</span><div class="shortcut-keys"><span class="shortcut-key">Alt</span><span class="shortcut-key">1-6</span></div></div>
     <div class="shortcut-row"><span class="shortcut-label">메시지 전송</span><div class="shortcut-keys"><span class="shortcut-key">Enter</span></div></div>
@@ -2881,6 +2882,11 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focu
     document.addEventListener('keydown', function(e) {
       var target = e.target;
       var isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+
+      /* Ctrl+N — New conversation */
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault(); newConvo(); showToast('새 대화가 시작되었습니다', 'success'); return;
+      }
 
       /* Ctrl+K — Search */
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
